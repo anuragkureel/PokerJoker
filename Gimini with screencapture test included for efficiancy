@@ -1,0 +1,295 @@
+import time
+import PIL.ImageGrab
+import pytesseract
+import cv2
+import re
+from collections import namedtuple
+from deuces import Card as DeucesCard
+from deuces import Evaluator
+import random
+import numpy as np
+
+# --- Configuration ---
+TESSERACT_PATH = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Update this with your Tesseract installation path
+if pytesseract.tesseract_cmd != TESSERACT_PATH:
+    pytesseract.tesseract_cmd = TESSERACT_PATH
+
+# --- Data Structures ---
+Card = namedtuple('Card', ['rank', 'suit'])
+
+RANK_MAP = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
+SUIT_MAP = {'h': 'hearts', 'd': 'diamonds', 'c': 'clubs', 's': 'spades'}
+REVERSE_RANK_MAP = {v: k for k, v in RANK_MAP.items()}
+REVERSE_SUIT_MAP = {v: k for k, v in SUIT_MAP.items()}
+
+# --- Helper Functions ---
+def convert_card_to_deuces(card):
+    """Converts our Card tuple to the integer format used by the deuces library."""
+    rank_char = REVERSE_RANK_MAP[card.rank]
+    suit_char = REVERSE_SUIT_MAP[card.suit][0].lower()
+    return DeucesCard.new(rank_char + suit_char)
+
+def evaluate_hand(player_cards, community_cards=None):
+    """Evaluates a poker hand using the deuces library."""
+    evaluator = Evaluator()
+    deuces_player_cards = [convert_card_to_deuces(card) for card in player_cards]
+    if community_cards:
+        deuces_community_cards = [convert_card_to_deuces(card) for card in community_cards]
+        if len(deuces_player_cards) == 2 and len(deuces_community_cards) >= 3:
+            return evaluator.evaluate(deuces_community_cards, deuces_player_cards), evaluator.class_to_string(evaluator.get_rank_class(deuces_community_cards, deuces_player_cards))
+    elif len(deuces_player_cards) == 5:
+        return evaluator.evaluate(deuces_player_cards[:2], deuces_player_cards[2:]), evaluator.class_to_string(evaluator.get_rank_class(deuces_player_cards[:2], deuces_player_cards[2:]))
+    return None, "Incomplete hand"
+
+def capture_and_ocr(region=None):
+    """Captures a screen region and performs OCR."""
+    start_time = time.time()
+    try:
+        if region:
+            image = PIL.ImageGrab.grab(bbox=region)
+        else:
+            image = PIL.ImageGrab.grab()
+        img_array = np.array(image)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        text = pytesseract.image_to_string(thresh)
+        end_time = time.time()
+        capture_duration = end_time - start_time
+        return text, capture_duration
+    except Exception as e:
+        end_time = time.time()
+        capture_duration = end_time - start_time
+        print(f"Error during capture or OCR: {e} (Capture time: {capture_duration * 1000:.2f} ms)")
+        return "", capture_duration
+
+def parse_game_state(ocr_text):
+    """Parses the OCR text to extract game state information (Adapt for Adda52)."""
+    game_state = {}
+    # --- Example parsing logic - Adapt this based on Adda52 table layout ---
+    hand_match = re.search(r"Your Hand:\s*([2-9TJQKA][hdcs])\s*([2-9TJQKA][hdcs])", ocr_text, re.IGNORECASE)
+    community_match = re.search(r"Board:\s*([2-9TJQKA][hdcs])?\s*([2-9TJQKA][hdcs])?\s*([2-9TJQKA][hdcs])?\s*([2-9TJQKA][hdcs])?\s*([2-9TJQKA][hdcs])?", ocr_text, re.IGNORECASE)
+    pot_match = re.search(r"Pot:\s*(\d+)", ocr_text, re.IGNORECASE)
+    call_match = re.search(r"Call\s*(\d+)", ocr_text, re.IGNORECASE) # Example: "Call 50"
+    street_match = re.search(r"(Preflop|Flop|Turn|River)", ocr_text, re.IGNORECASE)
+
+    if hand_match:
+        card1_str, card2_str = hand_match.groups()
+        game_state['player_hand'] = [Card(RANK_MAP[card1_str[:-1].upper()], SUIT_MAP[card1_str[-1].lower()]),
+                                     Card(RANK_MAP[card2_str[:-1].upper()], SUIT_MAP[card2_str[-1].lower()])]
+    else:
+        game_state['player_hand'] = []
+
+    if community_match:
+        community_cards_str = [card for card in community_match.groups() if card]
+        game_state['community_cards'] = [Card(RANK_MAP[card[:-1].upper()], SUIT_MAP[card[-1].lower()]) for card in community_cards_str]
+    else:
+        game_state['community_cards'] = []
+
+    if pot_match:
+        game_state['pot'] = int(pot_match.group(1))
+    else:
+        game_state['pot'] = 0
+
+    if call_match:
+        game_state['to_call'] = int(call_match.group(1))
+    else:
+        game_state['to_call'] = 0
+
+    if street_match:
+        game_state['street'] = street_match.group(1).lower()
+    else:
+        game_state['street'] = "preflop"
+
+    # --- Add more parsing logic to extract other relevant information
+    # --- like opponent actions, stack sizes, etc. based on Adda52 layout
+
+    return game_state
+
+def get_opponent_type():
+    """Simulates opponent playing style."""
+    types = ["tight_passive", "loose_passive", "tight_aggressive", "loose_aggressive", "balanced"]
+    return random.choice(types)
+
+def get_pot_odds(pot, to_call):
+    """Calculates pot odds."""
+    if to_call == 0:
+        return float('inf')
+    return pot / to_call
+
+def get_implied_odds(pot, to_call, opponent_stack):
+    """Estimates implied odds (simplified)."""
+    return get_pot_odds(pot + opponent_stack * 0.1, to_call) # Assume we might win 10% of opponent's stack
+
+def get_reverse_implied_odds(pot, to_call, opponent_stack):
+    """Estimates reverse implied odds (simplified)."""
+    return get_pot_odds(pot - opponent_stack * 0.1, to_call) # Assume we might lose 10% of opponent's stack
+
+def calculate_equity_vs_range(player_hand, community_cards, num_opponents=1):
+    """
+    A highly simplified estimation of equity against a random range.
+    For a real GTO approach, you'd need to define opponent ranges.
+    """
+    evaluator = Evaluator()
+    player_deuces_hand = [convert_card_to_deuces(card) for card in player_hand]
+    if community_cards:
+        player_deuces_hand.extend([convert_card_to_deuces(card) for card in community_cards])
+
+    deck = DeucesCard.get_deck()
+    known_cards = player_deuces_hand
+    if community_cards:
+        known_cards = [convert_card_to_deuces(card) for card in community_cards] + player_deuces_hand[:2]
+
+    wins = 0
+    trials = 1000  # Number of Monte Carlo simulations
+
+    for _ in range(trials):
+        board = list(known_cards[:len(community_cards)])
+        opponent_hands = []
+        possible_cards = [card for card in deck if card not in known_cards]
+        if len(possible_cards) < 2 * num_opponents:
+            continue # Not enough cards to deal
+
+        drawn_cards = random.sample(possible_cards, 2 * num_opponents)
+        for i in range(num_opponents):
+            opponent_hands.append(drawn_cards[i*2 : (i+1)*2])
+
+        player_best_rank = evaluator.evaluate(board, player_deuces_hand[:2])
+        player_rank_class = evaluator.get_rank_class(board, player_deuces_hand[:2])
+
+        opponent_won = False
+        for hand in opponent_hands:
+            opponent_best_rank = evaluator.evaluate(board, hand)
+            opponent_rank_class = evaluator.get_rank_class(board, hand)
+            if opponent_best_rank < player_best_rank:
+                opponent_won = True
+                break
+        if not opponent_won:
+            wins += 1
+
+    return wins / trials if trials > 0 else 0.5
+
+def get_raise_size(game_state, hand_strength, pot_size_bb, street, opponent_type, stack_size_bb, effective_stack_bb, is_value_betting, is_bluffing):
+    """Calculates a GTO-based raise size in Big Blinds (BB)."""
+    base_raise_multiplier = 2.5  # Default raise size in terms of the current bet
+
+    if street == "preflop":
+        # Open-raising
+        if game_state.get('bet_count', 0) == 0:
+            if hand_strength > 7:  # Strong starting hand
+                return round(base_raise_multiplier * 1) # 2.5 BB
+            elif hand_strength > 4 and random.random() < 0.3: # Some speculative hands
+                return round(base_raise_multiplier * 1) # 2.5 BB
+            else:
+                return 0 # Fold
+
+        # Re-raising
+        else:
+            if hand_strength > 8:
+                return round(base_raise_multiplier * game_state.get('last_bet_size_bb', 1) * 2) # 5x initial raise
+            elif hand_strength > 6 and random.random() < 0.5:
+                return round(base_raise_multiplier * game_state.get('last_bet_size_bb', 1) * 1.5) # 3.75x initial raise
+            else:
+                return 0 # Call or fold
+
+    elif street == "flop":
+        if is_value_betting:
+            # Aim for thin value
+            if hand_strength > 5:
+                return round(0.6 * pot_size_bb)
+            else:
+                return 0 # Check
+        elif is_bluffing:
+            return round(0.3 * pot_size_bb)
+        else:
+            # Continuation bet with decent hand
+            if hand_strength > 4 and game_state.get('preflop_raiser', False):
+                return round(0.5 * pot_size_bb)
+            else:
+                return 0 # Check
+
+    elif street == "turn":
+        if is_value_betting:
+            if hand_strength > 6:
+                return round(0.7 * pot_size_bb)
+            else:
+                return 0 # Check
+        elif is_bluffing:
+            return round(0.5 * pot_size_bb)
+        else:
+            return 0 # Check
+
+    elif street == "river":
+        if is_value_betting:
+            # Polarized range - strong hands bet big, bluffs bet big
+            if hand_strength > 7:
+                return round(0.8 * pot_size_bb)
+            else:
+                return round(0.7 * pot_size_bb) # Thin value with medium strength
+        elif is_bluffing:
+            return round(0.7 * pot_size_bb)
+        else:
+            return 0 # Check
+
+    return 0
+
+def get_advice(game_state):
+    """Provides GTO-based poker advice."""
+    if not game_state.get('player_hand'):
+        return "No hand detected."
+
+    player_hand = game_state['player_hand']
+    community_cards = game_state.get('community_cards', [])
+    pot = game_state.get('pot', 0)
+    to_call = game_state.get('to_call', 0)
+    street = game_state.get('street', "preflop")
+    opponent_type = get_opponent_type() # Simplified opponent modeling
+
+    hand_rank, hand_description = evaluate_hand(player_hand, community_cards)
+    hand_strength = 9 - (hand_rank // 100 if hand_rank is not None else 9) # Higher is stronger
+
+    pot_odds = get_pot_odds(pot, to_call)
+
+    # --- Simplified GTO-based decision logic ---
+    if street == "preflop":
+        # Very basic starting hand selection - adjust based on position and ranges
+        strong_starts = hand_strength > 6
+        decent_starts = hand_strength > 3
+
+        if to_call == 0: # No bet facing us
+            if strong_starts or (decent_starts and random.random() < 0.5):
+                raise_amount_bb = get_raise_size(game_state, hand_strength, pot / 2, street, opponent_type, 100, 100, True, False) # Assuming 100 BB stacks, pot in chips
+                if raise_amount_bb > 0:
+                    return f"Raise to {raise_amount_bb} BB"
+                else:
+                    return "Check"
+            else:
+                return "Fold"
+        else: # Facing a bet
+            if strong_starts or (decent_starts and pot_odds > 0.2): # Need decent pot odds to call weaker hands
+                return "Call"
+            else:
+                return "Fold"
+
+    else: # Flop, Turn, River
+        equity = calculate_equity_vs_range(player_hand, community_cards)
+
+        if to_call == 0:
+            # Betting logic - value vs. bluff
+            if equity > 0.6 or hand_strength > 6:
+                bet_size_bb = get_raise_size(game_state, hand_strength, pot / 2, street, opponent_type, 100, 100, True, False)
+                return f"Bet {bet_size_bb} BB (Value)"
+            elif random.random() < 0.3 and hand_strength < 3: # Small chance to bluff
+                bet_size_bb = get_raise_size(game_state, hand_strength, pot / 2, street, opponent_type, 100, 100, False, True)
+                return f"Bet {bet_size_bb} BB (Bluff)"
+            else:
+                return "Check"
+        else:
+            required_equity_to_call = to_call / (pot + to_call)
+            if equity > required_equity_to_call + 0.05: # Call if we have reasonable equity
+                return "Call"
+            elif equity > required_equity_to_call + 0.1 and random.random() < 0.4 and hand_strength > 5: # Raise with good equity for value
+                raise_amount_bb = get_raise_size(game_state, hand_strength, pot + to_call, street, opponent_type, 100, 100, True, False)
+                return f"Raise to {round(raise_amount_bb + to_call / 2)} BB"
+            elif equity < required_equity_to_call - 0.05 and random.random() < 0.2 and hand_strength < 4: # Bluff raise with low equity
+                raise_amount_bb = get_raise_size(game_state, hand_strength, pot + to_call, street, opponent_type, 100, 100, False, True)
+                return f"Raise to {round(raise_amount_bb + to_call / 2)} BB (Bluff)"
