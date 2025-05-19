@@ -1,0 +1,31 @@
+[
+  {
+    "playerName": "insecureHus...",
+    "action": "Raise",
+    "stackSize": "45.2 BB"
+  },
+  {
+    "playerName": "advancedSi...",
+    "action": "Sitting Out",
+    "stackSize": "120 BB"
+  },
+  {
+    "playerName": "Dibakarmart...",
+    "action": "Sitting Out",
+    "stackSize": "118 BB"
+  },
+  {
+    "playerName": "staidChecks...",
+    "action": "Call",
+    "stackSize": "192 BB"
+  },
+  {
+    "playerName": "AGENTP52",
+    "action": "BB",
+    "stackSize": "119 BB",
+    "holeCards": [
+      "7",
+      "8"
+    ]
+  }
+]

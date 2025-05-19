@@ -1,0 +1,52 @@
+{
+  "game": "Texas Hold'em",
+  "platform": "PokerBaazi",
+  "blinds": "25/50",
+  "pot_size": "5BB",
+  "playerInfor": {
+    "mainPlayer": {
+      "playerName": "AgentP52",
+      "cards": [
+        { "rank": "7", "suit": "clubs" },
+        { "rank": "8", "suit": "heart" }
+      ]
+    },
+    "otherPlayers": [
+      {
+        "playerName": "insecureHus...",
+        "playerBlinds": "2BB",
+        "playerstack": "45.2",
+        "dealer": "True",
+        "action": "Raise"
+      },
+      {
+        "playerName": "advancedSi...",
+        "playerBlinds": "2BB",
+        "playerstack": "120",
+        "dealer": "False",
+        "action": "Sitting Out"
+      },
+      {
+        "playerName": "Dibakarmart...",
+        "playerBlinds": "1BB",
+        "playerstack": "118",
+        "dealer": "False",
+        "action": "Sitting Out"
+      },
+      {
+        "playerName": "staidChecks...",
+        "playerBlinds": "2BB",
+        "playerstack": "192",
+        "dealer": "False",
+        "action": "Call"
+      }
+    ]
+  },
+  "betting_options": {
+    "fold": "True",
+    "call": 1,
+    "raise": 3,
+    "quick_raise_multipliers": [2, 2.1, 2.2, 3.5],
+    "custom_raise_amount": 3
+  }
+}

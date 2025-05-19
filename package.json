@@ -1,0 +1,24 @@
+{
+  "name": "pokerjoker",
+  "version": "1.0.0",
+  "description": "poker tool",
+  "type": "module",
+  "main": "googleImageRead.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anuragkureel/PokerJoker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anuragkureel/PokerJoker/issues"
+  },
+  "dependencies": {
+    "@google/genai": "^0.14.1",
+    "dotenv": "^16.3.1"
+  },
+  "homepage": "https://github.com/anuragkureel/PokerJoker#readme"
+}

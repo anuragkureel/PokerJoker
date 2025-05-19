@@ -1,30 +1,50 @@
-import openai
-from PIL import Image
-import io
-import base64
-import os  # <-- Add this line
+# Python virtual environment
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+Python virtual environment files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-openai.api_key = os.environ["OPENAI_API_KEY"]  # <-- This loads your API key from the environment variable
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn-integrity
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Load the screenshot
-with open("full_screenshot.png", "rb") as image_file:
-    image_bytes = image_file.read()
-    base64_image = base64.b64encode(image_bytes).decode("utf-8")
-
-# Compose the prompt for GPT-4 Vision
-prompt = "Describe the poker table in this screenshot. What are the visible cards and chips?"
-
-# Send the image and prompt to GPT-4 Vision
-response = openai.chat.completions.create(
-    model="gpt-4-vision-preview",
-    messages=[
-        {"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-        ]}
-    ],
-    max_tokens=500
-)
-
-# Print the AI's response
-print(response.choices[0].message.content)
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
