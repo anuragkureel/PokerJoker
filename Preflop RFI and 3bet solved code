@@ -1,0 +1,234 @@
+# Poker RTA - Decision Making Logic
+# Version 0.9 - Re-keyed VS_RFI ranges from 200BB to 75BB effective stacks
+
+# --- Configuration & Preflop Ranges ---
+
+# Initial ranges (some were for 200BB, now re-keyed to 75BB for VS_RFI)
+_PREFLOP_RANGES_RAW = {
+    # --- RFI Ranges (75BB Stacks from previous work) ---
+    ("UTG", 75, "RFI"): {
+        "AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "AKs", "AQs", "AJs", "ATs", "A9s", "A5s", "A4s",
+        "KQs", "KJs", "KTs", "QJs", "AKo", "AQo", "AJo", "KQo"
+    },
+    ("HJ", 75, "RFI"): {
+        "AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s",
+        "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "Q9s",
+        "JTs", "J9s", "T9s", "AKo", "AQo", "AJo", "ATo", "KQo", "KJo", "QJo"
+    },
+    ("CO", 75, "RFI"): {
+        "AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "AKs", "AQs", "AJs", "ATs", "A9s",
+        "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s",
+        "QJs", "QTs", "Q9s", "Q8s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "87s", "AKo", "AQo", "AJo",
+        "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo"
+    },
+    ("BTN", 75, "RFI"): {
+        "AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs",
+        "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s",
+        "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s",
+        "Q4s", "JTs", "J9s", "J8s", "J7s", "T9s", "T8s", "T7s", "98s", "97s", "87s", "86s", "76s", "65s",
+        "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQo", "KJo",
+        "KTo", "K9o", "QJo", "QTo", "Q9o", "JTo", "J9o", "T9o"
+    },
+    ("SB", 75, "RFI"): { # Actual SB RFI chart was 74.5BB, keyed as 75BB
+        "AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AKs", "AQs",
+        "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s",
+        "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s",
+        "Q4s", "Q3s", "Q2s", "JTs", "J9s", "J8s", "J7s", "J6s", "T9s", "T8s", "T7s", "T6s", "98s", "97s",
+        "96s", "87s", "86s", "76s", "75s", "65s", "54s", "43s", "32s", "AKo", "AQo", "AJo", "ATo", "A9o",
+        "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQo", "KJo", "KTo", "K9o", "K8o", "QJo", "QTo",
+        "Q9o", "JTo", "J9o", "T9o", "98o"
+    },
+
+    # --- VS RFI Ranges (Originally 200BB, now re-keyed to 75BB) ---
+    ("HJ", 200, "VS_RFI", "UTG"): {
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"CALL": 0.7, "3-BET": 0.3},
+        "JJ": {"CALL": 1.0}, "TT": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, 
+        "AQs": {"CALL": 0.8, "3-BET": 0.2}, "AJs": {"CALL": 1.0}, "KQs": {"CALL": 1.0},
+        "AKo": {"CALL": 0.2, "3-BET": 0.8}
+    },
+    ("CO", 200, "VS_RFI", "UTG"): {
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 0.8, "CALL": 0.2},
+        "JJ": {"CALL": 1.0}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, 
+        "AQs": {"3-BET": 0.5, "CALL": 0.5}, "AJs": {"CALL": 1.0}, "ATs": {"CALL": 1.0},
+        "KQs": {"CALL": 0.8, "3-BET": 0.2}, "KJs": {"CALL": 1.0}, "AKo": {"3-BET": 0.7, "CALL": 0.3}, 
+        "AQo": {"CALL": 1.0}
+    },
+    ("BTN", 200, "VS_RFI", "UTG"): {
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"CALL": 0.5, "3-BET": 0.5}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0},
+        "77": {"CALL": 0.7}, "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 0.8, "CALL": 0.2}, 
+        "AJs": {"CALL": 1.0}, "ATs": {"CALL": 1.0}, "A9s": {"CALL": 0.5},
+        "KQs": {"3-BET": 0.3, "CALL": 0.7}, "KJs": {"CALL": 1.0}, "KTs": {"CALL": 1.0},
+        "QJs": {"CALL": 1.0}, "JTs": {"CALL": 1.0}, "T9s": {"CALL": 1.0}, "AKo": {"3-BET": 1.0}, 
+        "AQo": {"CALL": 1.0}
+    },
+    ("SB", 200, "VS_RFI", "UTG"): { # Actual SB chart was 199.5BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"3-BET": 0.7, "CALL": 0.3}, "TT": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, 
+        "AQs": {"3-BET": 1.0}, "A5s": {"3-BET": 0.5}, "KQs": {"3-BET": 0.5, "CALL": 0.5},
+        "AKo": {"3-BET": 1.0}
+    },
+    ("BB", 200, "VS_RFI", "UTG"): { # Actual BB chart was 199BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"3-BET": 0.5, "CALL": 0.5}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0},
+        "77": {"CALL": 1.0}, "66": {"CALL": 1.0}, "55": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, 
+        "AQs": {"3-BET": 1.0}, "AJs": {"CALL": 0.5, "3-BET": 0.5}, "ATs": {"CALL": 1.0}, 
+        "A9s": {"CALL": 1.0}, "A8s": {"CALL": 0.5}, "A5s": {"CALL": 0.7, "3-BET": 0.3}, 
+        "A4s": {"CALL": 1.0}, "KQs": {"CALL": 0.7, "3-BET": 0.3}, "KJs": {"CALL": 1.0}, 
+        "KTs": {"CALL": 1.0}, "K9s": {"CALL": 1.0}, "QJs": {"CALL": 1.0}, "QTs": {"CALL": 1.0}, 
+        "JTs": {"CALL": 1.0}, "AKo": {"3-BET": 1.0}, "AQo": {"CALL": 0.7, "3-BET": 0.3}, 
+        "AJo": {"CALL": 1.0}, "KQo": {"CALL": 1.0}
+    },
+    ("CO", 200, "VS_RFI", "HJ"): { 
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"CALL": 0.7, "3-BET": 0.3}, 
+        "JJ": {"CALL": 1.0}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0}, 
+        "77": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, "AQs": {"CALL": 0.25, "3-BET": 0.75},
+        "AJs": {"CALL": 1.0}, "ATs": {"CALL": 1.0}, "A9s": {"CALL": 0.5, "3-BET": 0.5},
+        "KQs": {"CALL": 0.75, "3-BET": 0.25}, "KJs": {"CALL": 1.0}, "KTs": {"CALL": 1.0},
+        "QJs": {"CALL": 1.0}, "JTs": {"CALL": 1.0}, "T9s": {"CALL": 1.0},
+        "AKo": {"CALL": 0.2, "3-BET": 0.8}, "AQo": {"CALL": 1.0}
+    },
+    ("BTN", 200, "VS_RFI", "CO"): { 
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"CALL": 0.6, "3-BET": 0.4}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0},
+        "77": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, 
+        "AJs": {"CALL": 0.7, "3-BET": 0.3}, "ATs": {"CALL": 1.0}, "A9s": {"CALL": 1.0}, 
+        "A8s": {"CALL": 0.5}, "A5s": {"3-BET": 0.3}, "KQs": {"CALL": 0.5, "3-BET": 0.5}, 
+        "KJs": {"CALL": 1.0}, "KTs": {"CALL": 1.0}, "K9s": {"CALL": 1.0}, "QJs": {"CALL": 1.0}, 
+        "QTs": {"CALL": 1.0}, "JTs": {"CALL": 1.0}, "T9s": {"CALL": 1.0}, "98s": {"CALL": 1.0},
+        "AKo": {"3-BET": 1.0}, "AQo": {"CALL": 0.7, "3-BET": 0.3}, "AJo": {"CALL": 1.0},
+        "KQo": {"CALL": 1.0}
+    },
+    ("SB", 200, "VS_RFI", "BTN"): { # Actual SB chart was 199.5BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0}, "JJ": {"3-BET": 1.0},
+        "TT": {"CALL": 0.2, "3-BET": 0.8}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0}, "77": {"CALL": 0.5},
+        "66": {"CALL": 0.3}, "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"3-BET": 1.0},
+        "ATs": {"CALL": 0.4, "3-BET": 0.6}, "A9s": {"CALL": 0.7, "3-BET": 0.3}, "A8s": {"CALL": 0.7},
+        "A5s": {"3-BET": 1.0}, "A4s": {"3-BET": 0.7, "CALL":0.3}, "A3s": {"3-BET": 0.5, "CALL":0.5}, 
+        "A2s": {"CALL":0.5}, "KQs": {"3-BET": 1.0}, "KJs": {"CALL": 0.3, "3-BET": 0.7}, 
+        "KTs": {"CALL": 0.7, "3-BET": 0.3}, "K9s": {"CALL": 1.0}, "K8s": {"CALL": 0.5},
+        "QJs": {"CALL": 0.5, "3-BET": 0.5}, "QTs": {"CALL": 1.0}, "Q9s": {"CALL": 0.5},
+        "JTs": {"CALL": 1.0}, "J9s": {"CALL": 0.3}, "T9s": {"CALL": 1.0}, "AKo": {"3-BET": 1.0}, 
+        "AQo": {"3-BET": 1.0}, "AJo": {"CALL": 0.5, "3-BET": 0.5}, "ATo": {"CALL": 0.5}, 
+        "KQo": {"CALL": 0.8}
+    },
+    ("BB", 200, "VS_RFI", "HJ"): { # Actual BB chart was 199BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"CALL": 0.3, "3-BET": 0.7}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0},
+        "77": {"CALL": 1.0}, "66": {"CALL": 1.0}, "55": {"CALL": 1.0}, "44": {"CALL": 1.0}, 
+        "33": {"CALL": 1.0}, "22": {"CALL": 1.0}, "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, 
+        "AJs": {"CALL": 0.7, "3-BET": 0.3}, "ATs": {"CALL": 1.0}, "A9s": {"CALL": 1.0}, 
+        "A8s": {"CALL": 1.0}, "A7s": {"CALL": 1.0}, "A6s": {"CALL": 1.0}, 
+        "A5s": {"CALL": 0.7, "3-BET": 0.3}, "A4s": {"CALL": 0.7, "3-BET": 0.3},
+        "A3s": {"CALL": 1.0}, "A2s": {"CALL": 1.0}, "KQs": {"CALL": 0.5, "3-BET": 0.5}, 
+        "KJs": {"CALL": 1.0}, "KTs": {"CALL": 1.0}, "K9s": {"CALL": 1.0}, "K8s": {"CALL": 1.0}, 
+        "K7s": {"CALL": 1.0}, "K6s": {"CALL": 1.0}, "K5s": {"CALL":0.5}, "K4s": {"CALL":0.5},
+        "QJs": {"CALL": 1.0}, "QTs": {"CALL": 1.0}, "Q9s": {"CALL": 1.0}, "Q8s": {"CALL":0.5},
+        "JTs": {"CALL": 1.0}, "J9s": {"CALL": 1.0}, "T9s": {"CALL": 1.0}, "98s": {"CALL": 1.0},
+        "87s": {"CALL": 1.0}, "76s": {"CALL": 1.0}, "65s": {"CALL":0.5}, "AKo": {"3-BET": 1.0}, 
+        "AQo": {"CALL": 0.7, "3-BET": 0.3}, "AJo": {"CALL": 1.0}, "ATo": {"CALL": 1.0},
+        "A9o":{"CALL":0.5}, "A8o":{"CALL":0.3}, "KQo": {"CALL": 1.0}, "KJo": {"CALL": 1.0}, 
+        "QJo": {"CALL": 1.0}, "JTo": {"CALL":1.0}
+    },
+    ("BTN", 200, "VS_RFI", "HJ"): { 
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 0.8, "CALL": 0.2},
+        "JJ": {"CALL": 1.0}, "TT": {"CALL": 1.0}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0}, "77": {"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"CALL": 0.5, "3-BET": 0.5},
+        "ATs": {"CALL": 1.0}, "A9s": {"CALL": 0.5}, "A5s": {"3-BET": 0.3},
+        "KQs": {"CALL": 0.3, "3-BET": 0.7}, "KJs": {"CALL": 1.0}, "KTs": {"CALL": 1.0}, "K9s": {"CALL":0.5},
+        "QJs": {"CALL": 1.0}, "QTs": {"CALL":0.5}, "JTs": {"CALL": 1.0}, "T9s": {"CALL": 1.0},
+        "AKo": {"3-BET": 1.0}, "AQo": {"CALL": 0.7, "3-BET": 0.3}, "AJo": {"CALL": 1.0},
+        "KQo": {"CALL": 1.0}
+    },
+    ("SB", 200, "VS_RFI", "CO"): { # Actual SB chart was 199.5BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"CALL": 0.2, "3-BET": 0.8}, "TT": {"CALL": 0.8, "3-BET": 0.2}, "99": {"CALL": 1.0}, "88":{"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"3-BET": 0.8, "CALL": 0.2},
+        "ATs": {"CALL": 1.0}, "A9s":{"CALL":0.5}, "A5s": {"3-BET": 1.0}, "A4s": {"3-BET": 0.5, "CALL": 0.5},
+        "KQs": {"3-BET": 1.0}, "KJs": {"3-BET": 0.5, "CALL": 0.5}, "KTs": {"CALL": 1.0}, "K9s":{"CALL":0.5},
+        "QJs": {"CALL": 1.0}, "QTs":{"CALL":0.5}, "AKo": {"3-BET": 1.0}, 
+        "AQo": {"3-BET": 0.7, "CALL": 0.3}, "AJo": {"CALL": 1.0}, "KQo":{"CALL":0.5}
+    },
+    ("BB", 200, "VS_RFI", "CO"): { # Actual BB chart was 199BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0}, "JJ": {"3-BET": 1.0},
+        "TT": {"CALL": 0.7, "3-BET": 0.3}, "99": {"CALL": 1.0}, "88": {"CALL": 1.0}, "77": {"CALL": 1.0},
+        "66": {"CALL": 1.0}, "55": {"CALL": 1.0}, "44": {"CALL": 1.0}, "33":{"CALL":0.5}, "22":{"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"3-BET": 1.0},
+        "ATs": {"CALL": 0.5, "3-BET": 0.5}, "A9s": {"CALL": 1.0}, "A8s": {"CALL": 1.0}, "A7s": {"CALL": 1.0},
+        "A6s": {"CALL": 0.5}, "A5s": {"CALL": 0.3, "3-BET": 0.7}, "A4s": {"CALL": 0.5, "3-BET": 0.5},
+        "A3s": {"CALL": 1.0}, "A2s": {"CALL": 1.0}, "KQs": {"3-BET": 1.0}, 
+        "KJs": {"CALL": 0.7, "3-BET": 0.3}, "KTs": {"CALL": 1.0}, "K9s": {"CALL": 1.0},
+        "K8s": {"CALL": 1.0}, "K7s": {"CALL": 1.0}, "K6s": {"CALL": 1.0}, "K5s": {"CALL":1.0}, "K4s": {"CALL":1.0},
+        "QJs": {"CALL": 1.0}, "QTs": {"CALL": 1.0}, "Q9s": {"CALL": 1.0}, "Q8s": {"CALL":0.5},
+        "JTs": {"CALL": 1.0}, "J9s": {"CALL": 1.0}, "J8s": {"CALL":0.5}, "T9s": {"CALL": 1.0}, "98s": {"CALL": 1.0},
+        "87s": {"CALL":0.5}, "AKo": {"3-BET": 1.0}, "AQo": {"3-BET": 0.5, "CALL": 0.5}, 
+        "AJo": {"CALL": 1.0}, "ATo": {"CALL": 1.0}, "A9o":{"CALL":0.5},
+        "KQo": {"CALL": 0.8, "3-BET": 0.2}, "KJo": {"CALL": 1.0}, "KTo":{"CALL":0.5}, 
+        "QJo": {"CALL": 1.0}, "JTo": {"CALL":1.0}
+    },
+    ("SB", 200, "VS_RFI", "HJ"): { # Actual SB chart was 199.5BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0},
+        "JJ": {"3-BET": 0.7, "CALL": 0.3}, "TT": {"CALL": 1.0}, "99":{"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 0.7, "CALL": 0.3}, "AJs": {"CALL": 1.0},
+        "A5s": {"3-BET": 0.7, "CALL": 0.3}, "A4s":{"3-BET":0.5},
+        "KQs": {"3-BET": 0.5, "CALL": 0.5}, "KJs":{"CALL":0.5}, "AKo": {"3-BET": 1.0}
+    },
+    ("BB", 200, "VS_RFI", "BTN"): { # Actual BB chart was 199BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0}, "JJ": {"3-BET": 1.0},
+        "TT": {"CALL": 0.3, "3-BET": 0.7}, "99": {"CALL": 0.8, "3-BET": 0.2}, "88": {"CALL": 1.0},
+        "77": {"CALL": 1.0}, "66": {"CALL": 1.0}, "55": {"CALL": 1.0}, "44":{"CALL":0.5}, "33":{"CALL":0.5}, "22":{"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"3-BET": 1.0},
+        "ATs": {"CALL": 0.3, "3-BET": 0.7}, "A9s": {"CALL": 0.7, "3-BET": 0.3}, "A8s": {"CALL": 1.0},
+        "A7s": {"CALL": 1.0}, "A6s": {"CALL": 1.0}, "A5s": {"CALL": 0.5, "3-BET": 0.5},
+        "A4s": {"CALL": 0.8, "3-BET": 0.2}, "A3s": {"CALL": 1.0}, "A2s": {"CALL": 1.0},
+        "KQs": {"3-BET": 1.0}, "KJs": {"3-BET": 1.0}, "KTs": {"CALL": 0.7, "3-BET": 0.3},
+        "K9s": {"CALL": 1.0}, "K8s": {"CALL": 1.0}, "K7s": {"CALL": 1.0}, "K6s": {"CALL": 1.0}, "K5s": {"CALL":1.0}, "K4s": {"CALL":1.0},
+        "QJs": {"CALL": 0.5, "3-BET": 0.5}, "QTs": {"CALL": 1.0}, "Q9s": {"CALL": 1.0}, "Q8s": {"CALL":1.0},
+        "JTs": {"CALL": 1.0}, "J9s": {"CALL": 1.0}, "J8s": {"CALL":0.5}, "T9s": {"CALL": 1.0}, "T8s": {"CALL":0.5},
+        "98s": {"CALL":0.5}, "AKo": {"3-BET": 1.0}, "AQo": {"3-BET": 1.0}, 
+        "AJo": {"CALL": 0.5, "3-BET": 0.5}, "ATo": {"CALL": 1.0}, "A9o": {"CALL": 0.3},
+        "KQo": {"CALL": 0.3, "3-BET": 0.7}, "KJo": {"CALL": 1.0}, "KTo": {"CALL": 1.0}, "K9o":{"CALL":0.5},
+        "QJo":{"CALL":1.0}, "QTo":{"CALL":0.5}, "JTo":{"CALL":0.5}
+    },
+    ("BB", 200, "VS_RFI", "SB"): { # Actual BB chart was 199BB, SB raised to 3BB
+        "AA": {"3-BET": 1.0}, "KK": {"3-BET": 1.0}, "QQ": {"3-BET": 1.0}, "JJ": {"3-BET": 1.0},
+        "TT": {"3-BET": 1.0}, "99": {"CALL": 0.3, "3-BET": 0.7}, "88": {"CALL": 0.8, "3-BET": 0.2},
+        "77": {"CALL": 1.0}, "66": {"CALL": 1.0}, "55": {"CALL": 1.0}, "44": {"CALL": 1.0}, "33": {"CALL": 1.0}, "22":{"CALL":0.5},
+        "AKs": {"3-BET": 1.0}, "AQs": {"3-BET": 1.0}, "AJs": {"3-BET": 1.0}, "ATs": {"3-BET": 1.0},
+        "A9s": {"CALL": 0.2, "3-BET": 0.8}, "A8s": {"CALL": 0.5, "3-BET": 0.5}, "A7s": {"CALL": 0.8, "3-BET": 0.2},
+        "A6s": {"CALL": 1.0}, "A5s": {"CALL": 0.5, "3-BET": 0.5}, "A4s": {"CALL": 0.8, "3-BET": 0.2},
+        "A3s": {"CALL": 1.0}, "A2s": {"CALL": 1.0}, "KQs": {"3-BET": 1.0}, "KJs": {"3-BET": 1.0}, 
+        "KTs": {"3-BET": 1.0}, "K9s": {"CALL": 0.3, "3-BET": 0.7}, "K8s": {"CALL": 0.8, "3-BET": 0.2}, 
+        "K7s": {"CALL": 1.0}, "K6s": {"CALL": 1.0}, "K5s": {"CALL": 1.0}, "K4s": {"CALL": 1.0}, 
+        "K3s": {"CALL": 1.0}, "K2s": {"CALL": 1.0}, "QJs": {"3-BET": 1.0}, 
+        "QTs": {"CALL": 0.5, "3-BET": 0.5}, "Q9s": {"CALL": 1.0}, "Q8s": {"CALL": 1.0},
+        "Q7s": {"CALL": 1.0}, "Q6s": {"CALL": 1.0}, "Q5s": {"CALL": 1.0}, "Q4s":{"CALL":0.5}, "Q3s":{"CALL":0.5},
+        "JTs": {"CALL": 0.5, "3-BET": 0.5}, "J9s": {"CALL": 1.0}, "J8s": {"CALL": 1.0}, "J7s":{"CALL":0.5},
+        "T9s": {"CALL": 1.0}, "T8s": {"CALL": 1.0}, "T7s":{"CALL":0.5}, "98s": {"CALL": 1.0}, "97s":{"CALL":0.5},
+        "87s":{"CALL":1.0}, "86s":{"CALL":0.5}, "76s":{"CALL":1.0}, "AKo": {"3-BET": 1.0}, 
+        "AQo": {"3-BET": 1.0}, "AJo": {"3-BET": 1.0}, "ATo": {"CALL": 0.3, "3-BET": 0.7}, 
+        "A9o": {"CALL": 1.0}, "A8o": {"CALL": 1.0}, "A7o":{"CALL":0.5}, "KQo": {"3-BET": 1.0}, 
+        "KJo": {"CALL": 0.5, "3-BET": 0.5}, "KTo": {"CALL": 1.0}, "K9o":{"CALL":0.5},
+        "QJo": {"CALL": 1.0}, "QTo": {"CALL": 1.0}, "JTo": {"CALL": 1.0}
+    }
+}
+
+PREFLOP_RANGES = {}
+for key, value in _PREFLOP_RANGES_RAW.items():
+    pos, stack, action_type, *raiser_pos_tuple = key
+    new_stack = stack
+    # Re-key 200BB VS_RFI ranges to 75BB
+    if stack == 200 and action_type == "VS_RFI":
+        new_stack = 75
+    
+    if raiser_pos_tuple: # It's a VS_RFI key
+        new_key = (pos, new_stack, action_type, raiser_pos_tuple[0])
+    else: # It's an RFI key
+        new_key = (pos, new_stack, action_type)
+    PREFLOP_RANGES[new_key] = value
+
+# --- Helper Functions ---
+
+def normalize_hand(card1, card2):
+    """
+    Normalizes 
