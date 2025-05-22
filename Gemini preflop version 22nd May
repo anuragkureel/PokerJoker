@@ -1,0 +1,393 @@
+# --- Preflop Ranges Data Structure ---
+# Color combinations from GTO Wizard (example, adapt as needed by user):
+# Dark Red / Brown = All In
+# Red = Raise / Squeeze / 4-Bet / All-In (depending on context)
+# Green = Call / Check (depending on context)
+# Blue/Black = Fold
+# User has specified EV >= 0.1 filter for all ranges.
+
+PREFLOP_RANGES = {
+    "75BB": {
+        "RFI": { # Corrected RFI ranges based on EV >= 0.1 from re-evaluation
+            "UTG": { "Raise 2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "KK", "KQs", "QQ", "JJ", "TT", "AKo", "AQo"]},
+            "HJ": { "Raise 2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "JJ", "JTs", "TT", "T9s", "99", "AKo", "AQo", "AJo", "KQo"]},
+            "CO": { "Raise 2.2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "JJ", "JTs", "TT", "T9s", "T8s", "99", "98s", "88", "AKo", "AQo", "AJo", "ATo", "KQo", "QJo"]},
+            "BTN": { "Raise 2.5BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "QQ", "QJs", "QTs", "Q9s", "JJ", "JTs", "J9s", "J8s", "TT", "T9s", "T8s", "99", "88", "77", "66", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo"]},
+            "SB": { "Raise 3BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "QQ", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "JJ", "JTs", "J9s", "J8s", "TT", "T9s", "T8s", "99", "98s", "88", "77", "66", "55", "44", "33", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo", "T9o"]}
+        },
+        "VS_RFI": { # Fully re-evaluated VS RFI ranges based on EV >= 0.1
+            "HJ": { 
+                "UTG_RFI": { # UTG Raised 2BB. Hero HJ acts.
+                    "Call": ["AJs", "TT", "99"], 
+                    "3-Bet": {"size_bb": 6, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "AKo"]}
+                }
+            },
+            "CO": { 
+                "UTG_RFI": { # UTG Raised 2BB. Hero CO acts.
+                    "Call": ["AJs", "TT", "99"], 
+                    "3-Bet": {"size_bb": 6, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}
+                },
+                "HJ_RFI": { # HJ Raised 2BB. Hero CO acts.
+                    "Call": ["AJs", "TT", "99", "88", "77", "AQo"],
+                    "3-Bet": {"size_bb": 6.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}
+                }
+            },
+            "BTN": { 
+                "UTG_RFI": { # UTG Raised 2BB. Hero BTN acts.
+                    "Call": ["AJs", "ATs", "A9s", "KJs", "KTs", "QJs", "QTs", "JTs", "T9s", "98s", "87s", "76s", "TT", "99", "88", "77", "66", "AQo"],
+                    "3-Bet": {"size_bb": 6.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}
+                },
+                "HJ_RFI": { # HJ Raised 2BB. Hero BTN acts. (KQo corrected to 3-Bet)
+                     "Call": ["AJs", "ATs", "A9s", "A8s", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "88", "77", "66", "55", "AQo", "AJo"],
+                     "3-Bet": {"size_bb": 7, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "A5s", "A4s", "AKo", "KQo"]} # KQo added here
+                },
+                "CO_RFI": { # CO Raised 2.2BB. Hero BTN acts.
+                    "Call": ["AJs", "ATs", "A9s", "A8s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "TT", "99", "88", "77", "66", "55", "AQo", "AJo", "KQo"],
+                    "3-Bet": {"size_bb": 7, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}
+                }
+            },
+            "SB": { 
+                "UTG_RFI": { # UTG Raised 2BB. Hero SB acts.
+                    "Call": [], 
+                    "3-Bet": {"size_bb": 9.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "AQo"]}
+                },
+                "HJ_RFI": { # HJ Raised 2BB. Hero SB acts.
+                    "Call": ["TT", "99"], 
+                    "3-Bet": {"size_bb": 9.2, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo", "AQo"]}
+                },
+                "CO_RFI": { # CO Raised 2.2BB. Hero SB acts. (KQs corrected to 3-Bet)
+                    "Call": ["99"], 
+                    "3-Bet": {"size_bb": 9.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "KQs", "A5s", "A4s", "AKo", "AQo"]} # KQs added here
+                },
+                "BTN_RFI": { # BTN Raised 2.5BB. Hero SB acts.
+                    "Call": ["A9s", "A8s", "KJs", "KTs", "QJs", "JTs", "T9s", "99", "88", "77", "AJo", "KQo", "KJo", "QJo"],
+                    "3-Bet": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "ATs", "A5s", "A4s", "AKo", "AQo"]}
+                }
+            },
+            "BB": { 
+                "UTG_RFI": { # UTG Raised 2BB. Hero BB acts.
+                    "Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "87s", "76s", "65s", "TT", "99", "88", "77", "66", "55", "44", "AQo", "AJo", "ATo", "KQo", "KJo", "QJo"], 
+                    "3-Bet": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]}
+                },
+                "HJ_RFI": { # HJ Raised 2BB. Hero BB acts.
+                    "Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "K8s", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "98s", "87s", "76s", "TT", "99", "88", "77", "66", "55", "AQo", "AJo", "ATo", "A9o", "KQo", "KJo", "KTo", "QJo"],
+                    "3-Bet": {"size_bb": 8, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}
+                },
+                "CO_RFI": { # CO Raised 2.2BB. Hero BB acts.
+                    "Call": ["ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KJs", "KTs", "K9s", "K8s", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "98s", "97s", "87s", "76s", "65s", "TT", "99", "88", "77", "66", "55", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo"],
+                    "3-Bet": {"size_bb": 9.2, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo", "AQo"]}
+                },
+                "BTN_RFI": { # BTN Raised 2.5BB. Hero BB acts.
+                    "Call": ["A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "QJs", "QTs", "Q9s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "97s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQo", "KJo", "KTo", "K9o", "K8o", "K7o", "QJo", "QTo", "Q9o", "JTo", "J9o", "T9o"],
+                    "3-Bet": {"size_bb": 8.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "ATs", "A5s", "A4s", "AKo", "AQo"]}
+                },
+                "SB_RFI": { # SB Raised 3BB. Hero BB acts.
+                    "Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "QJs", "QTs", "Q9s", "Q8s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "97s", "87s", "76s", "65s", "54s", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "K9o", "QJo", "QTo", "JTo", "T9o", "98o"],
+                    "3-Bet": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]}
+                }
+            }
+        },
+        "VS_3Bet": { # Hero RFI'd and faces a 3Bet
+            "UTG": { 
+                "HJ": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "CO": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "BTN": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "SB": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "BB": {"Call": ["QQ", "JJ", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo", "TT"]}}
+            },
+            "HJ": { 
+                "CO": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "BTN": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo", "AJs"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "SB": {"Call": ["QQ", "JJ", "TT", "99", "AQs", "AJs", "ATs", "KQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                "BB": {"Call": ["QQ", "JJ", "TT", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+            },
+            "CO": { 
+                 "BTN": {"Call": ["QQ", "JJ", "TT", "AQs", "AJs", "ATs", "KQs", "AQo", "AJo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                 "SB": {"Call": ["QQ", "JJ", "TT", "99", "AQs", "AJs", "ATs", "KQs", "AQo", "AJo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}, 
+                 "BB": {"Call": ["JJ", "TT", "AQs", "AJs", "ATs", "KQs", "KJs", "AQo", "AJo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "AKs", "AKo"]}}  
+            },
+            "BTN": {
+                "SB": {"Call": ["JJ", "TT", "99", "88", "AJs", "ATs", "A9s", "A8s", "KQs", "KJs", "KTs", "QJs", "JTs", "AQo", "AJo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "AKs", "AKo"]}}, 
+                "BB": {"Call": ["TT", "99", "AQs", "AJs", "ATs", "KQs", "KJs", "KTs", "QJs", "AQo", "AJo", "KQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AKo"]}} 
+            },
+            "SB": {
+                "BB": {"Call": ["JJ", "TT", "99", "88", "77", "66", "AJs", "ATs", "A9s", "A8s", "A7s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "AQo", "AJo", "ATo", "KQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "AKs", "AKo"]}}
+            }
+        },
+        "VS_4Bet": {
+            "AS_RFIER": { 
+                "UTG": { 
+                    "HJ_3BETTOR": { 
+                        "CO_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs"]}},
+                        "BTN_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs"]}},
+                        "SB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                        "BB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+                    },
+                    "CO_3BETTOR": { 
+                        "BTN_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs"]}},
+                        "SB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                        "BB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+                    },
+                    "BTN_3BETTOR": { 
+                        "SB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                        "BB_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+                    }
+                },
+                "HJ": { 
+                    "CO_3BETTOR": { 
+                        "BTN_4BETTOR": {"All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+                    }
+                }
+            },
+            "AS_3BETTOR": { 
+                "HJ": { 
+                    "UTG_RFIER": { 
+                        "CO_4BETTOR": {"Call": ["QQ", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                        "BTN_4BETTOR": {"Call": ["QQ", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}},
+                        "SB_4BETTOR": {"Call": [], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "AKs", "AKo"]}},
+                        "BB_4BETTOR": {"Call": [], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "QQ", "AKs", "AKo"]}}
+                    }
+                },
+                "CO": { 
+                    "UTG_RFIER": { 
+                        "BTN_4BETTOR": {"Call": ["QQ", "JJ", "AQs", "AQo"], "All-In": {"size_bb": 75, "hands": ["AA", "KK", "AKs", "AKo"]}}
+                    }
+                }
+            }
+        },
+        "VS_5BET_AI": { 
+            "Event_UTG_RFI_HJ_3B_CO_4B_BTN_5BAI": { 
+                "UTG_HERO": {"Call_AI": ["AA", "KK", "AKs"]},
+                "HJ_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]},
+                "CO_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]}
+            },
+            "Event_UTG_RFI_HJ_3B_BTN_4B_SB_5BAI": { 
+                "UTG_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo"]},
+                "HJ_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]},
+                "BTN_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]}
+            },
+            "Event_UTG_RFI_HJ_3B_SB_4B_BB_5BAI": { 
+                "UTG_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]},
+                "HJ_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]},
+                "SB_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]}
+            },
+            "Event_UTG_RFI_CO_3B_BTN_4B_SB_5BAI": { 
+                "UTG_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo"]},
+                "CO_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]}, 
+                "BTN_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]}  
+            },
+            "Event_UTG_RFI_CO_3B_SB_4B_BB_5BAI": { 
+                "UTG_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ"]}, 
+                "CO_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]},  
+                "SB_HERO": {"Call_AI": ["AA", "KK", "AKs", "AKo", "QQ", "JJ"]}   
+            }
+        },
+        "VS_Limp": {
+            "BB_vs_SB_Limp": { 
+                "Raise 6BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "KK", "KQs", "KJs", "KTs", "K9s", "QQ", "QJs", "QTs", "JJ", "JTs", "TT", "AKo", "AQo", "AJo", "ATo", "KQo"],
+                "Raise 3BB": ["A6s", "A5s", "A4s", "A3s", "A2s", "K8s", "K7s", "K6s", "K5s", "K4s", "Q9s", "Q8s", "J9s", "J8s", "T9s", "T8s", "99", "98s", "88", "87s", "77", "66", "55", "44", "33", "A9o", "A8o", "A7o", "A6o", "A5o", "KJo", "KTo", "K9o", "QJo", "QTo", "Q9o", "JTo", "J9o", "T9o"],
+                "Check": ["K3s", "K2s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s", "J7s", "J6s", "J5s", "J4s", "J3s", "J2s", "T7s", "T6s", "T5s", "T4s", "T3s", "T2s", "97s", "96s", "95s", "94s", "93s", "92s", "86s", "85s", "84s", "83s", "82s", "76s", "75s", "74s", "73s", "72s", "65s", "64s", "63s", "62s", "54s", "53s", "52s", "43s", "42s", "32s", "22", "A4o", "A3o", "A2o", "K8o", "K7o", "K6o", "K5o", "K4o", "K3o", "K2o", "Q8o", "Q7o", "Q6o", "Q5o", "Q4o", "J8o", "J7o", "J6o", "J5o", "T8o", "T7o", "T6o", "98o", "97o", "96o", "87o", "86o", "76o", "75o", "65o", "64o", "54o"]
+            }
+        },
+        "VS_RAISE_THEN_CALL": { # Hero acts after RFI from P1 and Call from P2
+            "CO": { 
+                "UTG_RFI": { 
+                    "HJ_CALLER": {
+                        "Squeeze": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]},
+                        "Call": ["AJs", "ATs", "KQs", "AQo"] 
+                    }
+                }
+            },
+            "BTN": { 
+                "UTG_RFI": {
+                    "HJ_CALLER": {
+                        "Squeeze": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "KQs", "AKo", "AQo"]},
+                        "Call": ["ATs", "A9s", "KTs", "QJs", "JTs", "T9s", "98s", "88", "77", "AJo", "KQo"]
+                    },
+                    "CO_CALLER": {
+                        "Squeeze": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "KQs", "AKo", "AQo"]},
+                        "Call": ["ATs", "A9s", "A8s", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "99", "88", "77", "AJo", "KQo"]
+                    }
+                },
+                "HJ_RFI": {
+                     "CO_CALLER": {
+                        "Squeeze": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "KQs", "AKo", "AQo"]},
+                        "Call": ["ATs", "A9s", "A8s", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "99", "88", "77", "66", "AJo", "KQo", "KJo"]
+                    }
+                }
+            },
+            "SB": { 
+                "UTG_RFI": {
+                    "HJ_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "AQo"]},
+                        "Call": ["99", "88", "AJs", "ATs", "KQs", "AJo"]
+                    },
+                    "CO_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "AKo", "AQo"]},
+                        "Call": ["99", "88", "ATs", "KQs", "KJs", "AJo"]
+                    },
+                    "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "AKo", "AQo"]},
+                        "Call": ["88", "A9s", "KJs", "KTs", "QJs", "JTs", "AJo", "KQo"]
+                    }
+                },
+                "HJ_RFI": { 
+                    "CO_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "AKo", "AQo"]},
+                        "Call": ["99", "88", "A9s", "KQs", "KJs", "KTs", "QJs", "AJo", "KQo"]
+                    },
+                    "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "KJs", "KTs", "QJs", "JTs", "T9s", "88", "77", "AJo", "KQo", "KJo", "QJo"]
+                    }
+                },
+                "CO_RFI": {
+                    "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "KJs", "KTs", "QJs", "JTs", "T9s", "88", "77", "66", "AJo", "KQo", "KJo", "QJo"]
+                    }
+                }
+            },
+            "BB": { 
+                "UTG_RFI": {
+                    "HJ_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "AQo"]},
+                        "Call": ["AJs", "ATs", "A9s", "KQs", "KJs", "KTs", "QJs", "JTs", "T9s", "99", "88", "77", "AJo", "KQo", "KJo"]
+                    },
+                    "CO_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "AKo", "AQo"]},
+                        "Call": ["ATs", "A9s", "A8s", "KQs", "KJs", "KTs", "QJs", "QTs", "JTs", "T9s", "99", "88", "77", "66", "AJo", "KQo", "KJo"]
+                    },
+                    "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "88", "77", "66", "AJo", "KQo", "KJo", "QTo"]
+                    }
+                },
+                "HJ_RFI": {
+                     "CO_CALLER": {
+                        "Squeeze": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AJs", "AKo", "AQo"]},
+                        "Call": ["ATs", "A9s", "A8s", "KQs", "KJs", "KTs", "QJs", "QTs", "JTs", "T9s", "99", "88", "77", "66", "55", "AJo", "KQo", "KJo"]
+                    },
+                     "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "A7s", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "88", "77", "66", "55", "AJo", "KQo", "KJo", "QTo"]
+                    }
+                },
+                "CO_RFI": {
+                    "BTN_CALLER": {
+                        "Squeeze": {"size_bb": 10.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "AJs", "ATs", "KQs", "KJs", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "A7s", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "88", "77", "66", "55", "AJo", "KQo", "KJo", "QTo"]
+                    },
+                    "SB_CALLER": { # This was re-analyzed based on image 5.40.07 PM.jpg
+                        "Squeeze": {"size_bb": 11, "hands": ["AA", "AKs", "AQs", "AJs", "ATs", "A5s", "A4s", "KK", "KQs", "KJs", "QQ", "QJs", "JJ", "TT", "AKo", "AQo"]},
+                        "Call": ["A9s", "A8s", "KTs", "K9s", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "98s", "88", "77", "66", "AJo", "KQo", "KJo", "QJo"]
+                    }
+                },
+                "BTN_RFI": {
+                    "SB_CALLER": { 
+                        "Squeeze": {"size_bb": 11.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "AKs", "AQs", "AJs", "ATs", "A9s", "KQs", "KJs", "QJs", "AKo", "AQo", "AJo"]},
+                        "Call": ["A8s", "A7s", "A6s", "A5s", "KTs", "K9s", "QTs", "JTs", "T9s", "98s", "77", "66", "ATo", "KQo", "KJo", "QJo", "JTo"]
+                    }
+                }
+            },
+            "UTG": { 
+                "SB_RFI": { 
+                    "BB_CALLER": { 
+                        "Squeeze": {"size_bb": 12, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]},
+                        "Call": [] 
+                    }
+                }
+            }
+        }
+    }
+}
+
+# --- Helper function to normalize hand representations ---
+def normalize_hand(hand_str):
+    if not hand_str or len(hand_str) < 2: return "InvalidHand"
+    rank1_char = hand_str[0].upper(); rank2_char = hand_str[1].upper()
+    rank_order = "AKQJT98765432"; idx1 = rank_order.find(rank1_char); idx2 = rank_order.find(rank2_char)
+    if idx1 == -1 or idx2 == -1: return "InvalidHand"
+    if rank1_char == rank2_char:
+        if len(hand_str) == 2: return rank1_char * 2
+        elif len(hand_str) == 3 and hand_str[2] in 'so': return rank1_char * 2
+        else: return "InvalidHand"
+    final_ranks = ""; 
+    if idx1 < idx2: final_ranks = rank1_char + rank2_char
+    else: final_ranks = rank2_char + rank1_char
+    if len(hand_str) == 4: 
+        suit1 = hand_str[1].lower(); suit2 = hand_str[3].lower()
+        if suit1 == suit2: return final_ranks + "s"
+        else: return final_ranks + "o"
+    elif len(hand_str) == 3: 
+        suffix = hand_str[2].lower()
+        if suffix in ['s', 'o']: return final_ranks + suffix
+        else: return "InvalidHand"
+    elif len(hand_str) == 2: return "InvalidHand" 
+    return "InvalidHand"
+
+# --- Core Logic Function for Preflop Advice ---
+def get_preflop_action(stack_depth_bb, hero_position, hero_hand_input, actions_before_hero):
+    hero_hand = hero_hand_input 
+    
+    # --- This function needs a complete overhaul to correctly parse actions_before_hero ---
+    # --- and navigate the deeply nested PREFLOP_RANGES structure for all scenarios. ---
+    # --- The current logic below is highly simplified and primarily handles RFI and basic VS_RFI ---
+    # --- It WILL NOT correctly identify or use most of the complex ranges we've added (VS_3Bet, VS_4Bet, etc.) ---
+
+    # Simplified RFI & VS_RFI Logic (for demonstration with re-evaluated ranges)
+    is_rfi_spot_for_hero = True
+    rfi_action_info = None
+    
+    if actions_before_hero:
+        processed_actions_no_folds = [act for act in actions_before_hero if act.get("action") != "Fold"]
+        if not processed_actions_no_folds:
+             is_rfi_spot_for_hero = True
+        else:
+            is_rfi_spot_for_hero = False
+            raises_by_others = [act for act in processed_actions_no_folds if act.get("action") == "Raise" and act.get("position") != hero_position]
+            if len(raises_by_others) == 1 and not any(act.get("action") == "Raise" and act.get("position") == hero_position for act in processed_actions_no_folds): # Hero hasn't raised, and only one other raise
+                 rfi_action_info = raises_by_others[0] # This is the RFI hero is facing
+
+    if is_rfi_spot_for_hero: 
+        try: 
+            rfi_section = PREFLOP_RANGES.get(f"{stack_depth_bb}BB", {}).get("RFI", {})
+            positional_range_info = rfi_section.get(hero_position)
+            if positional_range_info:
+                action_desc_key = list(positional_range_info.keys())[0] 
+                hands_for_action = positional_range_info[action_desc_key]
+                if hero_hand in hands_for_action:
+                    if "Raise" in action_desc_key:
+                        size = float(action_desc_key.split("Raise ")[1].split("BB")[0])
+                        return {"action": "Raise", "size_bb": size, "hand_played": hero_hand}
+                return {"action": "Fold", "reason": "Hand not in RFI range (EV < 0.1 or not listed)", "hand_played": hero_hand}
+            else: return {"action": "Fold", "reason": f"No RFI range for {hero_position}", "hand_played": hero_hand}
+        except Exception as e: return {"action": "Fold", "reason": f"Error in RFI lookup: {str(e)}", "hand_played": hero_hand}
+    
+    elif rfi_action_info: # Hero is facing a single RFI
+        try:
+            villain_rfi_pos = rfi_action_info.get("position")
+            vs_rfi_section = PREFLOP_RANGES.get(f"{stack_depth_bb}BB", {}).get("VS_RFI", {})
+            hero_vs_villain_ranges = vs_rfi_section.get(hero_position, {}).get(f"{villain_rfi_pos}_RFI")
+            
+            if hero_vs_villain_ranges:
+                if "Call" in hero_vs_villain_ranges and hero_hand in hero_vs_villain_ranges["Call"]:
+                    return {"action": "Call RFI", "hand_played": hero_hand}
+                if "3-Bet" in hero_vs_villain_ranges and hero_hand in hero_vs_villain_ranges["3-Bet"]["hands"]:
+                    return {"action": "3-Bet", "size_bb": hero_vs_villain_ranges["3-Bet"]["size_bb"], "hand_played": hero_hand}
+                return {"action": "Fold to RFI", "reason":"Hand not in VS_RFI range (EV < 0.1 or not listed)", "hand_played": hero_hand}
+            else: return {"action": "Fold to RFI", "reason": f"No VS_RFI range for {hero_position} vs {villain_rfi_pos}", "hand_played": hero_hand}
+        except Exception as e: return {"action": "Fold to RFI", "reason": f"Error in VS_RFI lookup: {str(e)}", "hand_played": hero_hand}
+
+    return {"action": "Fold", "reason": "Complex scenario - get_preflop_action parsing needs full implementation for this state.", "hand_played": hero_hand}
+
+# --- Example Usage (Conceptual) ---
+if __name__ == '__main__':
+    print("--- Corrected RFI Tests (75BB, EV >= 0.1) ---")
+    print(f"UTG with A9s (75BB): {get_preflop_action(75, 'UTG', 'A9s', [])}") 
+    
+    print("\n--- Corrected VS RFI Tests (75BB, EV >= 0.1) ---")
+    actions_utg_rfi = [{"position": "UTG", "action": "Raise", "size_bb": 2, "sequence_number": 0}]
+    print(f"HJ with AJs vs UTG RFI: {get_preflop_action(75, 'HJ', 'AJs', actions_utg_rfi)}")
+    print(f"HJ with AKs vs UTG RFI: {get_preflop_action(75, 'HJ', 'AKs', actions_utg_rfi)}")
+    print(f"HJ with 22 vs UTG RFI: {get_preflop_action(75, 'HJ', '22', actions_utg_rfi)}")
