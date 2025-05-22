@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import * as fs from "node:fs";
 import dotenv from "dotenv";
+import { z } from "zod";
 
 dotenv.config();
 
 const apiKey = process.env.GOOGLE_API_KEY;
-
 const ai = new GoogleGenAI({ apiKey });
 const cardInfoImage = "/Users/trip/git/PokerJoker/test2.jpeg";
 const playerInfoImage = "/Users/trip/git/PokerJoker/test1.jpeg";
@@ -13,50 +13,68 @@ const solver_results = "/Users/trip/git/PokerJoker/test4.png";
 const base64ImageFile = fs.readFileSync(solver_results, {
   encoding: "base64",
 });
+const MAX_RETRIES = 3;
+// Zod schemas for validation
+const CardSchema = z.object({
+  cards: z.array(
+    z.object({
+      rank: z.enum([
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "J",
+        "Q",
+        "K",
+        "A",
+      ]),
+      suit: z.enum(["hearts", "diamonds", "clubs", "spades"]),
+    })
+  ),
+});
+const TableInfoSchema = z.object({
+  community_cards: z.array(
+    z.object({
+      rank: z.enum([
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "J",
+        "Q",
+        "K",
+        "A",
+      ]),
+      suit: z.enum(["hearts", "diamonds", "clubs", "spades"]),
+    })
+  ),
+  pot_size: z.number(),
+});
 
-const cardSchema = {
-  value: "string", // "2-10, J, Q, K, A"
-  type: "string", // "hearts", "diamonds", "clubs", "spades"
-  description: "A playing card in a standard 52-card deck",
-  properties: {
-    value: {
-      type: "string",
-      enum: ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"],
-      description: "The rank of the card",
-    },
-    type: {
-      type: "string",
-      enum: ["hearts", "diamonds", "clubs", "spades"],
-      description: "The suit of the card",
-    },
-  },
-};
-const tableInfoSchema = {
-  community_cards: {
-    type: "array",
-    items: cardSchema,
-    description: "Community cards on the table (flop, turn, river)",
-  },
-  pot_size: {
-    type: "number",
-    description: "Total chips in play at the table in big blinds (BB)",
-  },
-  description: "Information about the current state of the poker table",
-};
-const playerInfoSchema = {
-  properties: {
-    playerName: {
-      type: "string",
-      description: "The username or name of the player",
-    },
-    playerPosition: {
-      type: "string",
-      enum: ["UTG", "MP", "CO", "BTN", "SB", "BB", "Sitting out"],
-      description: "The position of the player at the table",
-    },
-    playerState: {
-      type: "string",
-      enum: [
+const PlayerInfoSchema = z.object({
+  players: z.array(
+    z.object({
+      playerName: z.string(),
+      playerPosition: z.enum([
+        "UTG",
+        "MP",
+        "CO",
+        "BTN",
+        "SB",
+        "BB",
+        "Sitting out",
+      ]),
+      playerState: z.enum([
         "Active",
         "Sitting out",
         "All-In",
@@ -64,71 +82,212 @@ const playerInfoSchema = {
         "Waiting for BB",
         "Disconnected",
         "Time Bank",
-      ],
-      description: "Current state of the player in the game",
-    },
-    playerBet: {
-      type: "string",
-      description: "Current bet amount in BB",
-    },
-    stack: {
-      type: "number",
-      description: "Player's current chip stack in big blinds (BB)",
-    },
-  },
-};
-const data_schema_short = {
-  tableInfo: tableInfoSchema,
-  mainplayerInfo: playerInfoSchema,
-  otherPlayerInfo: {
-    type: "array",
-    items: playerInfoSchema,
-    description: "Information about other players at the table",
-  },
-};
-const tableInfoPrompt = `you are an expert image analyser. You need to extract this image of a poker game, and output the data related to this schema: tableInfoSchema: ${tableInfoSchema}  inside the tableInfoSchema, cardSchema stands for: ${cardSchema}. Your output is tableInfoSchema object with, tableInfoSchema['community_cards']['items'] = array of cardSchema objects and tableInfoSchema['pot_size']=number`;
-const mainplayerInfoPrompt = `you are an expert image analyser. You need to analyse the poker game image provided, and output the cards of the current player for this schema: ${cardSchema}. Output an array of card objects. `;
-const otherPlayerInfoPropmt = `you are an expert image analyser. You need to analyse the poker game image provided, and extract the player related information. fit your response into this schema: playerInfoSchema: ${playerInfoSchema}. output should be a json `;
-const solver_result_prompt = `you are an expert image analuyser. HEre you need to analyse the poker solver image, which is a grid of colored boxes. give me a list of boxes which has >50% of green color. Do not include boxes with less than 50% green. Your output must be a JSON`;
-const contents = [
+      ]),
+      playerBet: z.string().nullable(),
+      stack: z.number(),
+    })
+  ),
+});
+
+//add following cases:
+//1. main player card info
+//2. table info
+//3. other player info
+const input_variables = [
   {
-    inlineData: {
-      mimeType: "image/jpeg",
-      data: base64ImageFile,
-    },
+    type: "main_player_cards",
+    prompt: `Analyze this poker game image and return a JSON object in this exact format:
+    {
+      "cards": [
+        {
+          "rank": "2-10, J, Q, K, or A",
+          "suit": "hearts, diamonds, clubs, or spades"
+        }
+      ]
+    }
+    Return ONLY the JSON object, no other text or explanation.`,
+    imageInputPath:
+      "/Users/trip/git/PokerJoker/imageDataForLLMPrompt/crop/image_crop_mainplayer_cards.png",
+    imageOutPath:
+      "/Users/trip/git/PokerJoker/OCR_result/main_player_cards.json",
+    outputSchema: CardSchema,
   },
-  { text: solver_result_prompt },
+  {
+    type: "table_cards",
+    prompt: `Analyze this poker game image and return a JSON object in this exact format:
+    {
+      "community_cards": [
+        {
+          "rank": "2-10, J, Q, K, or A",
+          "suit": "hearts, diamonds, clubs, or spades"
+        }
+      ],
+      "pot_size": number
+    }
+    Return ONLY the JSON object, no other text or explanation.`,
+    imageInputPath:
+      "/Users/trip/git/PokerJoker/imageDataForLLMPrompt/crop/image_crop_table_cards.png",
+    imageOutPath: "/Users/trip/git/PokerJoker/OCR_result/table_cards.json",
+    outputSchema: TableInfoSchema,
+  },
+  {
+    type: "other_player_info",
+    prompt: `Analyze this poker game image and return a JSON object in this exact format:
+    {
+      "players": [
+        {
+          "playerName": "string",
+          "playerPosition": "UTG, MP, CO, BTN, SB, BB, or Sitting out",
+          "playerState": "Active, Sitting out, All-In, Folded, Waiting for BB, Disconnected, or Time Bank",
+          "playerBet": "string",
+          "stack": number
+        }
+      ]
+    }
+    Return ONLY the JSON object, no other text or explanation.`,
+    imageInputPath:
+      "/Users/trip/git/PokerJoker/imageDataForLLMPrompt/crop/image_crop_table_info.png",
+    imageOutPath:
+      "/Users/trip/git/PokerJoker/OCR_result/other_player_info.json",
+    outputSchema: PlayerInfoSchema,
+  },
 ];
 
-console.log("LLM input ", contents);
-const response = await ai.models.generateContent({
-  model: "gemini-2.0-flash",
-  contents: contents,
+const SolverResultSchema = z.object({
+  greenBoxes: z.array(
+    z.object({
+      x: z.number(),
+      y: z.number(),
+      greenPercentage: z.number().min(50),
+    })
+  ),
 });
-try {
-  // Try to parse the response text as JSON
-  let cleanedResponse = response.text.replace(/```json\n|\n```/g, "");
 
-  const jsonData = JSON.parse(cleanedResponse);
-
-  // Write the JSON data to a file
-  fs.writeFileSync(
-    "/Users/trip/git/PokerJoker/tests2.json",
-    JSON.stringify(jsonData, null, 2),
-    "utf8"
-  );
-
-  console.log("Successfully saved response to tests.json");
-} catch (parseError) {
-  console.error("Error parsing response as JSON:", parseError);
-
-  // If parsing fails, still save the raw text
-  fs.writeFileSync(
-    "/Users/trip/git/PokerJoker/tests1.json",
-    response.text,
-    "utf8"
-  );
-
-  console.log("Saved raw response text to tests.json (not valid JSON)");
+// Function to clean and parse LLM response
+function cleanAndParseLLMResponse(response) {
+  return response.replace(/```json\n|\n```/g, "");
 }
-console.log("here is the response of the LLM", response.text);
+
+// Function to validate response against schema
+async function validateResponse(response, schema) {
+  try {
+    const cleanedResponse = cleanAndParseLLMResponse(response);
+    console.log("cleanedResponse ", cleanedResponse);
+    const parsedData = JSON.parse(cleanedResponse);
+    return schema.parse(parsedData);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Schema validation error:", error.errors);
+    } else {
+      console.error("JSON parsing error:", error);
+    }
+    throw error;
+  }
+}
+
+// Function to make API call with retries
+async function makeAPICallWithRetry(prompt, schema, imageData, retryCount = 0) {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: imageData,
+          },
+        },
+        { text: prompt },
+      ],
+    });
+    console.log("response.text", response.text);
+    const validatedData = await validateResponse(response.text, schema);
+    return validatedData;
+  } catch (error) {
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Retry attempt ${retryCount + 1} of ${MAX_RETRIES}`);
+      const modifiedPrompt =
+        prompt +
+        `{error while parsing response into the schema: ${error}, schema: ${schema}}`;
+      return makeAPICallWithRetry(
+        modifiedPrompt,
+        schema,
+        imageData,
+        retryCount + 1
+      );
+    }
+    throw new Error(`Failed after ${MAX_RETRIES} attempts: ${error.message}`);
+  }
+}
+
+// Main function to process solver results
+async function processInputVariable(inputVar) {
+  try {
+    // Read the image file for this specific input
+    const imageData = fs.readFileSync(inputVar.imageInputPath, {
+      encoding: "base64",
+    });
+
+    const result = await makeAPICallWithRetry(
+      inputVar.prompt,
+      inputVar.outputSchema,
+      imageData
+    );
+
+    // Save the result to the specified output path
+    fs.writeFileSync(
+      inputVar.imageOutPath,
+      JSON.stringify(result, null, 2),
+      "utf8"
+    );
+
+    console.log(
+      `Successfully processed ${inputVar.type} and saved to ${inputVar.imageOutPath}`
+    );
+    return result;
+  } catch (error) {
+    console.error(`Error processing ${inputVar.type}:`, error);
+    throw error;
+  }
+}
+
+// Main function to process all input variables
+async function processSolverResults() {
+  try {
+    const results = {};
+
+    // Process each input variable sequentially
+    for (const inputVar of input_variables) {
+      try {
+        results[inputVar.type] = await processInputVariable(inputVar);
+      } catch (error) {
+        console.error(`Failed to process ${inputVar.type}:`, error);
+        // Save error information
+      }
+    }
+
+    // Save combined results
+    fs.writeFileSync(
+      "/Users/trip/git/PokerJoker/OCR_result/combined_results.json",
+      JSON.stringify(results, null, 2),
+      "utf8"
+    );
+    console.log("Successfully processed all inputs");
+    return results;
+  } catch (error) {
+    console.error("Failed to process solver results:", error);
+    throw error;
+  }
+}
+
+// Example usage
+async function main() {
+  try {
+    const result = await processSolverResults();
+    console.log("Processed result:", result);
+  } catch (error) {
+    console.error("Main process failed:", error);
+  }
+}
+
+main();

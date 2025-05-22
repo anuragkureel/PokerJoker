@@ -23,7 +23,7 @@ def extract_text_from_image(image_path):
     except Exception as e:
         return f"Error processing image: {e}"
 
-def create_ROI_for_given_coordinates(coordinates, img, idx):
+def create_ROI_for_given_coordinates(coordinatesObject, img):
     """
     Creates a Region of Interest (ROI) from the given coordinates and saves it.
     
@@ -35,6 +35,8 @@ def create_ROI_for_given_coordinates(coordinates, img, idx):
     Returns:
         PIL.Image: The cropped image (ROI)
     """
+    coordinates = coordinatesObject['coords']
+    name=coordinatesObject['name']
     try:
         # Extract coordinates
         start_x = coordinates['start']['x']
@@ -53,7 +55,7 @@ def create_ROI_for_given_coordinates(coordinates, img, idx):
         roi = img.crop((start_x, start_y, end_x, end_y))
         
         # Save the ROI to a file
-        output_path = "image_snap_saved_{idx}.png"
+        output_path = f'/Users/trip/git/PokerJoker/imageDataForLLMPrompt/crop/image_crop_{name}.png'
         roi.save(output_path)
         
         print(f"ROI saved to {output_path}")
@@ -63,7 +65,7 @@ def create_ROI_for_given_coordinates(coordinates, img, idx):
         print(f"Error creating ROI: {e}")
         return None
 
-def draw_red_box(coordinates, img):
+def draw_red_box(coordinatesObject, img):
 
     """
     Draws a red box on the image using the given coordinates.
@@ -76,6 +78,9 @@ def draw_red_box(coordinates, img):
     Returns:
         PIL.Image: A copy of the original image with the red box drawn on it
     """
+    coordinates = coordinatesObject['coords']
+    name = coordinatesObject['name']
+
     try:
         # Create a copy of the image to avoid modifying the original
         img_with_box = img.copy()
@@ -101,7 +106,7 @@ def draw_red_box(coordinates, img):
         draw.rectangle([(start_x, start_y), (end_x, end_y)], outline="red", width=3)
         
         # Save the image with the box to a file
-        output_path = "image_with_red_box.png"
+        output_path = f'/Users/trip/git/PokerJoker/imageDataForLLMPrompt/red/image_with_red_box_{name}.png'
         img_with_box.save(output_path)
         
         print(f"Image with red box saved to {output_path}")
@@ -156,15 +161,22 @@ def main():
             {
                 'name': 'mainplayer_cards',
                 'coords': {
-                    'start': {'x': 620, 'y': 570},
-                    'end': {'x': 850, 'y': 700}
+                    'start': {'x': 460, 'y': 600},
+                    'end': {'x': 650, 'y': 730}
                 }
             },
             {
                 'name': 'table_cards',
                 'coords': {
                     'start': {'x': 300, 'y': 310},
-                    'end': {'x': 780, 'y': 510}
+                    'end': {'x': 820, 'y': 510}
+                }
+            },
+            {
+                'name': 'table_info',
+                'coords': {
+                    'start': {'x': 0, 'y': 0},
+                    'end': {'x': 1142, 'y': 842}
                 }
             }
         ]
@@ -174,15 +186,15 @@ def main():
             print(f"\nProcessing {coord_set['name']}...")
             
             # Draw red box
-            img_with_box = draw_red_box(coord_set['coords'], img)
+            img_with_box = draw_red_box(coord_set, img)
             
             # Create ROI
-            roi_img = create_ROI_for_given_coordinates(coord_set['coords'], img, idx)
+            roi_img = create_ROI_for_given_coordinates(coord_set, img)
             
             # Save the image with box
-            box_output_path = f"image_with_red_box_{idx}.png"
-            img_with_box.save(box_output_path)
-            print(f"Image with box saved to {box_output_path}")
+            # box_output_path = f"image_with_red_box_{idx}.png"
+            # img_with_box.save(box_output_path)
+            # print(f"Image with box saved to {box_output_path}")
         
     except Exception as e:
         print(f"Error getting image information: {e}")

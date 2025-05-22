@@ -1,0 +1,18 @@
+{
+  "players": [
+    {
+      "playerName": "Sanjay1616",
+      "playerPosition": "BTN",
+      "playerState": "Active",
+      "playerBet": "CHECK",
+      "stack": 1557
+    },
+    {
+      "playerName": "AGENTP52",
+      "playerPosition": "SB",
+      "playerState": "Active",
+      "playerBet": null,
+      "stack": 117
+    }
+  ]
+}

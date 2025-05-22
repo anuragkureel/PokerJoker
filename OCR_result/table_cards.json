@@ -1,0 +1,25 @@
+{
+  "community_cards": [
+    {
+      "rank": "10",
+      "suit": "clubs"
+    },
+    {
+      "rank": "2",
+      "suit": "spades"
+    },
+    {
+      "rank": "9",
+      "suit": "clubs"
+    },
+    {
+      "rank": "7",
+      "suit": "clubs"
+    },
+    {
+      "rank": "2",
+      "suit": "clubs"
+    }
+  ],
+  "pot_size": 2
+}

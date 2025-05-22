@@ -1,0 +1,6 @@
+{
+  "error": "Failed after 3 attempts: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"array\",\n    \"path\": [],\n    \"message\": \"Expected object, received array\"\n  }\n]",
+  "timestamp": "2025-05-22T08:29:08.468Z",
+  "stack": "Error: Failed after 3 attempts: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"array\",\n    \"path\": [],\n    \"message\": \"Expected object, received array\"\n  }\n]\n    at makeAPICallWithRetry (file:///Users/trip/git/PokerJoker/googleImageRead.js:162:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async processInputVariable (file:///Users/trip/git/PokerJoker/googleImageRead.js:174:20)\n    at async processSolverResults (file:///Users/trip/git/PokerJoker/googleImageRead.js:205:34)\n    at async main (file:///Users/trip/git/PokerJoker/googleImageRead.js:243:20)",
+  "type": "other_player_info"
+}

@@ -1,0 +1,57 @@
+{
+  "main_player_cards": {
+    "cards": [
+      {
+        "rank": "Q",
+        "suit": "clubs"
+      },
+      {
+        "rank": "7",
+        "suit": "spades"
+      }
+    ]
+  },
+  "table_cards": {
+    "community_cards": [
+      {
+        "rank": "10",
+        "suit": "clubs"
+      },
+      {
+        "rank": "2",
+        "suit": "spades"
+      },
+      {
+        "rank": "9",
+        "suit": "clubs"
+      },
+      {
+        "rank": "7",
+        "suit": "clubs"
+      },
+      {
+        "rank": "2",
+        "suit": "clubs"
+      }
+    ],
+    "pot_size": 2
+  },
+  "other_player_info": {
+    "players": [
+      {
+        "playerName": "Sanjay1616",
+        "playerPosition": "BTN",
+        "playerState": "Active",
+        "playerBet": "CHECK",
+        "stack": 1557
+      },
+      {
+        "playerName": "AGENTP52",
+        "playerPosition": "SB",
+        "playerState": "Active",
+        "playerBet": null,
+        "stack": 117
+      }
+    ]
+  }
+}

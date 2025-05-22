@@ -1,0 +1,67 @@
+{
+  "main_player_cards": {
+    "cards": [
+      {
+        "rank": "8",
+        "suit": "spades"
+      },
+      {
+        "rank": "8",
+        "suit": "hearts"
+      }
+    ]
+  },
+  "table_cards": {
+    "community_cards": [
+      {
+        "rank": "8",
+        "suit": "diamonds"
+      },
+      {
+        "rank": "5",
+        "suit": "clubs"
+      },
+      {
+        "rank": "Q",
+        "suit": "hearts"
+      },
+      {
+        "rank": "A",
+        "suit": "spades"
+      }
+    ],
+    "pot_size": 15.6
+  },
+  "other_player_info": {
+    "players": [
+      {
+        "playerName": "insecureHus...",
+        "playerPosition": "BTN",
+        "playerState": "Folded",
+        "playerBet": null,
+        "stack": 45.2
+      },
+      {
+        "playerName": "Dibakarmart...",
+        "playerPosition": "SB",
+        "playerState": "Sitting out",
+        "playerBet": null,
+        "stack": 118
+      },
+      {
+        "playerName": "staidChecks...",
+        "playerPosition": "BB",
+        "playerState": "Active",
+        "playerBet": null,
+        "stack": 187
+      },
+      {
+        "playerName": "AGENTP52",
+        "playerPosition": "CO",
+        "playerState": "Active",
+        "playerBet": null,
+        "stack": 113
+      }
+    ]
+  }
+}

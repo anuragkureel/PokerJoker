@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@google/genai": "^0.14.1",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "zod": "^3.25.3"
   },
   "homepage": "https://github.com/anuragkureel/PokerJoker#readme"
 }

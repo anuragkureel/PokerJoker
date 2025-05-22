@@ -1,0 +1,12 @@
+{
+  "cards": [
+    {
+      "rank": "Q",
+      "suit": "clubs"
+    },
+    {
+      "rank": "7",
+      "suit": "spades"
+    }
+  ]
+}
