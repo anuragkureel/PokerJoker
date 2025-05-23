@@ -1,0 +1,242 @@
+# --- Preflop Ranges Data Structure (Universal Strategy based on 75BB Charts) ---
+# Guidelines for interpretation:
+# - Hero: Identified by light green rectangular box (top right of chart, position name in its top left).
+# - Betting Tree: From top bar (grey background, white text for actions).
+# - Hero's Current Available Actions & Sizings: From "final action window" (right-most box with action buttons).
+# - Color Code Referencing image_23851a.png:
+#     Blue=FOLD, Green=CALL,
+#     Red (e.g., #f00000)=SIZED_RAISE (e.g., 4-Bet to X BB, find X from action panel's "Raise X BB" button),
+#     Dark Red/Brown (e.g., Burgundy)=ALL_IN (find "All-In Y BB" button on action panel).
+# - Mixed Strategies: Choose action with highest surface area in hand square.
+# - EV Filter: Active plays (Call, Sized_Raise, All-In) included if EV >= 0.1 (from white text, bottom right of hand square).
+# - "VS 3Bet" Rule: Zero All-Ins by Hero unless hand cells are Dark Red/Brown.
+
+PREFLOP_RANGES = {
+    "RFI": { # Corrected RFI ranges based on EV >= 0.1 from re-evaluation
+        "UTG": { "Raise 2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "KK", "KQs", "QQ", "JJ", "TT", "AKo", "AQo"]},
+        "HJ": { "Raise 2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "JJ", "JTs", "TT", "T9s", "99", "AKo", "AQo", "AJo", "KQo"]},
+        "CO": { "Raise 2.2BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "KK", "KQs", "KJs", "KTs", "QQ", "QJs", "QTs", "JJ", "JTs", "TT", "T9s", "T8s", "99", "98s", "88", "AKo", "AQo", "AJo", "ATo", "KQo", "QJo"]},
+        "BTN": { "Raise 2.5BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "QQ", "QJs", "QTs", "Q9s", "JJ", "JTs", "J9s", "J8s", "TT", "T9s", "T8s", "99", "88", "77", "66", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo"]},
+        "SB": { "Raise 3BB": ["AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "QQ", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "JJ", "JTs", "J9s", "J8s", "TT", "T9s", "T8s", "99", "98s", "88", "77", "66", "55", "44", "33", "AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo", "T9o"]}
+    },
+    "VS_RFI": { # Fully re-evaluated VS RFI ranges
+        "HJ": {"UTG_RFI": {"Call": ["AJs", "TT", "99"], "3-Bet": {"size_bb": 6, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "AKo"]}}},
+        "CO": {
+            "UTG_RFI": {"Call": ["AJs", "TT", "99"], "3-Bet": {"size_bb": 6, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}},
+            "HJ_RFI": {"Call": ["AJs", "TT", "99", "88", "77", "AQo"], "3-Bet": {"size_bb": 6.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}}
+        },
+        "BTN": {
+            "UTG_RFI": {"Call": ["AJs", "ATs", "A9s", "KJs", "KTs", "QJs", "QTs", "JTs", "T9s", "98s", "87s", "76s", "TT", "99", "88", "77", "66", "AQo"], "3-Bet": {"size_bb": 6.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}},
+            "HJ_RFI": {"Call": ["AJs", "ATs", "A9s", "A8s", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "88", "77", "66", "55", "AQo", "AJo"], "3-Bet": {"size_bb": 7, "hands": ["AA", "KK", "QQ", "JJ", "TT", "99", "AKs", "AQs", "KQo", "A5s", "A4s", "AKo"]}},
+            "CO_RFI": {"Call": ["AJs", "ATs", "A9s", "A8s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "TT", "99", "88", "77", "66", "55", "AQo", "AJo", "KQo"], "3-Bet": {"size_bb": 7, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}}
+        },
+        "SB": {
+            "UTG_RFI": {"Call": [], "3-Bet": {"size_bb": 9.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "AKo", "AQo"]}},
+            "HJ_RFI": {"Call": ["TT", "99"], "3-Bet": {"size_bb": 9.2, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo", "AQo"]}},
+            "CO_RFI": {"Call": ["99"], "3-Bet": {"size_bb": 9.5, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "KQs", "A5s", "A4s", "AKo", "AQo"]}},
+            "BTN_RFI": {"Call": ["A9s", "A8s", "KJs", "KTs", "QJs", "JTs", "T9s", "99", "88", "77", "AJo", "KQo", "KJo", "QJo"], "3-Bet": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "TT", "AKs", "AQs", "ATs", "A5s", "A4s", "AKo", "AQo"]}}
+        },
+        "BB": {
+            "UTG_RFI": {"Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "QJs", "QTs", "JTs", "T9s", "98s", "87s", "76s", "65s", "TT", "99", "88", "77", "66", "55", "44", "AQo", "AJo", "ATo", "KQo", "KJo", "QJo"], "3-Bet": {"size_bb": 10, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]}},
+            "HJ_RFI": {"Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "K8s", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "98s", "87s", "76s", "TT", "99", "88", "77", "66", "55", "AQo", "AJo", "ATo", "A9o", "KQo", "KJo", "KTo", "QJo"], "3-Bet": {"size_bb": 8, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo"]}},
+            "CO_RFI": {"Call": ["ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KJs", "KTs", "K9s", "K8s", "QJs", "QTs", "Q9s", "JTs", "J9s", "T9s", "T8s", "98s", "97s", "87s", "76s", "65s", "TT", "99", "88", "77", "66", "55", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "QJo", "QTo", "JTo"], "3-Bet": {"size_bb": 9.2, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "A5s", "A4s", "AKo", "AQo"]}},
+            "BTN_RFI": {"Call": ["A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "QJs", "QTs", "Q9s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "97s", "87s", "86s", "76s", "75s", "65s", "64s", "54s", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o", "KQo", "KJo", "KTo", "K9o", "K8o", "K7o", "QJo", "QTo", "Q9o", "JTo", "J9o", "T9o"], "3-Bet": {"size_bb": 8.5, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "ATs", "A5s", "A4s", "AKo", "AQo"]}},
+            "SB_RFI": {"Call": ["AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "QJs", "QTs", "Q9s", "Q8s", "JTs", "J9s", "J8s", "T9s", "T8s", "98s", "97s", "87s", "76s", "65s", "54s", "TT", "99", "88", "77", "66", "55", "44", "33", "22", "AQo", "AJo", "ATo", "A9o", "A8o", "KQo", "KJo", "KTo", "K9o", "QJo", "QTo", "JTo", "T9o", "98o"], "3-Bet": {"size_bb": 9, "hands": ["AA", "KK", "QQ", "JJ", "AKs", "AQs", "AKo"]}}
+        }
+    },
+    "VS_3Bet": { # Hero RFI'd and is now facing a 3-Bet from Villain. Partially re-evaluated.
+        "UTG_RFI": { 
+            "HJ_3BETTOR": { # UTG (Hero) vs HJ 3Bet to 6BB. (From Screenshot 4.49.24 PM.jpg)
+                            # Action Panel for Hero shows: "Raise 18BB" (Red), "Call" (Green), "Fold" (Blue). NO All-In button.
+                "Call": ["AQs", "AQo", "QQ", "JJ", "TT"],         
+                "4-Bet_Sized": {"size_bb": 18, "hands": ["AA", "KK", "AKs", "AKo"]}, 
+                "4-Bet_All-In": {"size_bb": 75, "hands": []} # No All-In action by Hero per user rule for VS 3Bet unless Dark Red/Brown
+            },
+            "CO_3BETTOR": { # UTG (Hero) vs CO 3Bet. (From Screenshot 4.50.55 PM.jpg)
+                            # Action Panel for Hero assumed to have "Raise 18BB" (or similar) based on previous test case.
+                            # Actual call list and red hands for 4-Bet_Sized need to be extracted from THIS chart.
+                "Call": ["TT", "AQs"], # Example from previous attempt, to be re-verified from this chart.
+                "4-Bet_Sized": {"size_bb": 18, "hands": ["AA", "KK", "AKs", "AKo", "AQo", "KQs", "AJs", "KJs", "QQ", "JJ"]}, # Hands user said were "Raising hands" for this chart.
+                "4-Bet_All-In": {"size_bb": 75, "hands": []} 
+            },
+            "BTN_3BETTOR": { # Placeholder - Needs re-evaluation based on its specific chart and action panel
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            },
+            "SB_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            },
+            "BB_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            }
+        },
+        "HJ_RFI": { 
+            "CO_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            },
+            "BTN_3BETTOR": { # Corrected in previous test based on user input for this specific chart
+                "Call": ["AQs", "AJs", "AQo", "QQ", "JJ", "TT"],      
+                "4-Bet_Sized": {"size_bb": 20, "hands": ["AA", "KK", "AKs", "AKo"]}, 
+                "4-Bet_All-In": {"size_bb": 75, "hands": []} 
+            },
+            "SB_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            },
+            "BB_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            }
+        },
+        "CO_RFI": { 
+            "BTN_3BETTOR": { # Placeholder
+                "Call": [], "4-Bet_Sized": {"size_bb": 0, "hands": []}, "4-Bet_All-In": {"size_bb": 75, "hands": []}
+            }
+            # SB_3BETTOR, BB_3BETTOR for CO_RFI are pending
+        }
+        # BTN_RFI vs SB/BB 3Bet and SB_RFI vs BB 3Bet are pending
+    },
+    "VS_4Bet": { # This category and below are now empty pending fresh start
+        "AS_RFIER": {},
+        "AS_3BETTOR": {}
+    },
+    "VS_5BET_AI": {},
+    "VS_Limp": {},
+    "VS_RAISE_THEN_CALL": {},
+    "VS_SQUEEZE": {}
+}
+
+# --- Helper function to normalize hand representations ---
+def normalize_hand(hand_str):
+    if not hand_str or len(hand_str) < 2: return "InvalidHand"
+    rank1_char = hand_str[0].upper(); rank2_char = hand_str[1].upper()
+    rank_order = "AKQJT98765432"; idx1 = rank_order.find(rank1_char); idx2 = rank_order.find(rank2_char)
+    if idx1 == -1 or idx2 == -1: return "InvalidHand"
+    if rank1_char == rank2_char:
+        if len(hand_str) == 2: return rank1_char * 2
+        elif len(hand_str) == 3 and hand_str[2] in 'so': return rank1_char * 2
+        else: return "InvalidHand"
+    final_ranks = ""; 
+    if idx1 < idx2: final_ranks = rank1_char + rank2_char
+    else: final_ranks = rank2_char + rank1_char
+    if len(hand_str) == 4: 
+        suit1 = hand_str[1].lower(); suit2 = hand_str[3].lower()
+        if suit1 == suit2: return final_ranks + "s"
+        else: return final_ranks + "o"
+    elif len(hand_str) == 3: 
+        suffix = hand_str[2].lower()
+        if suffix in ['s', 'o']: return final_ranks + suffix
+        else: return "InvalidHand"
+    elif len(hand_str) == 2: return "InvalidHand" 
+    return "InvalidHand"
+
+# --- Core Logic Function for Preflop Advice (Placeholder for now) ---
+def get_preflop_action(hero_position, hero_hand_input, actions_before_hero):
+    hero_hand = normalize_hand(hero_hand_input)
+    if hero_hand == "InvalidHand":
+        return {"action": "Fold", "reason": "Invalid hand input", "hand_played": hero_hand_input}
+
+    # This function needs significant development to parse actions_before_hero
+    # and navigate the full PREFLOP_RANGES structure for all scenarios.
+    # The logic below is highly simplified.
+    
+    # --- Determine Scenario (Highly Simplified) ---
+    is_rfi_opportunity_for_hero = True
+    rfi_action_info = None
+    three_bet_action_info = None
+    
+    processed_actions_no_folds = [act for act in actions_before_hero if act.get("action") != "Fold"]
+    raises = [act for act in processed_actions_no_folds if act.get("action") == "Raise"]
+    num_raises = len(raises)
+
+    if not processed_actions_no_folds:
+         is_rfi_opportunity_for_hero = True
+    else:
+        is_rfi_opportunity_for_hero = False
+        if num_raises == 1 and raises[0].get("position") != hero_position:
+             rfi_action_info = raises[0] 
+        elif num_raises == 2:
+            rfi_action_info = raises[0]
+            three_bet_action_info = raises[1]
+            
+    if is_rfi_opportunity_for_hero: 
+        # ... (RFI lookup as previously corrected) ...
+        try: 
+            rfi_section = PREFLOP_RANGES.get("RFI", {})
+            positional_range_info = rfi_section.get(hero_position)
+            if positional_range_info:
+                action_desc_key = list(positional_range_info.keys())[0] 
+                hands_for_action = positional_range_info[action_desc_key]
+                if hero_hand in hands_for_action:
+                    if "Raise" in action_desc_key:
+                        size_str = action_desc_key.split("Raise ")[1].split("BB")[0]
+                        size = float(size_str)
+                        return {"action": "Raise", "size_bb": size, "hand_played": hero_hand}
+                return {"action": "Fold", "reason": "Hand not in RFI range", "hand_played": hero_hand}
+            else: return {"action": "Fold", "reason": f"No RFI range for {hero_position}", "hand_played": hero_hand}
+        except Exception as e: return {"action": "Fold", "reason": f"Error in RFI lookup: {str(e)}", "hand_played": hero_hand}
+    
+    elif rfi_action_info and not three_bet_action_info: # Hero is facing a single RFI
+        # ... (VS RFI lookup as previously corrected) ...
+        try:
+            villain_rfi_pos = rfi_action_info.get("position")
+            vs_rfi_section = PREFLOP_RANGES.get("VS_RFI", {})
+            hero_vs_villain_ranges = vs_rfi_section.get(hero_position, {}).get(f"{villain_rfi_pos}_RFI")
+            if hero_vs_villain_ranges:
+                if "Call" in hero_vs_villain_ranges and hero_hand in hero_vs_villain_ranges["Call"]:
+                    return {"action": "Call RFI", "hand_played": hero_hand}
+                if "3-Bet" in hero_vs_villain_ranges and hero_hand in hero_vs_villain_ranges["3-Bet"]["hands"]:
+                    return {"action": "3-Bet", "size_bb": hero_vs_villain_ranges["3-Bet"]["size_bb"], "hand_played": hero_hand}
+                return {"action": "Fold to RFI", "reason":"Hand not in VS_RFI range", "hand_played": hero_hand}
+            else: return {"action": "Fold to RFI", "reason": f"No VS_RFI range for {hero_position} vs {villain_rfi_pos}", "hand_played": hero_hand}
+        except Exception as e: return {"action": "Fold to RFI", "reason": f"Error in VS_RFI lookup: {str(e)}", "hand_played": hero_hand}
+
+    elif rfi_action_info and three_bet_action_info and rfi_action_info.get("position") == hero_position: # Hero RFI'd and is facing a 3Bet
+        try:
+            villain_3bettor_pos = three_bet_action_info.get("position")
+            vs_3bet_section = PREFLOP_RANGES.get("VS_3Bet", {})
+            hero_facing_3bet_ranges = vs_3bet_section.get(f"{hero_position}_RFI", {}).get(f"{villain_3bettor_pos}_3BETTOR")
+
+            if hero_facing_3bet_ranges:
+                if "Call" in hero_facing_3bet_ranges and hero_hand in hero_facing_3bet_ranges["Call"]:
+                    return {"action": "Call 3Bet", "hand_played": hero_hand}
+                if "4-Bet_Sized" in hero_facing_3bet_ranges and \
+                   hero_facing_3bet_ranges["4-Bet_Sized"]["hands"] and \
+                   hero_hand in hero_facing_3bet_ranges["4-Bet_Sized"]["hands"]:
+                     return {"action": "4-Bet", "size_bb": hero_facing_3bet_ranges["4-Bet_Sized"]["size_bb"], "hand_played": hero_hand}
+                # "4-Bet_All-In" is intentionally not checked here for VS_3Bet as per user's "zero all-ins" rule unless Dark Red/Brown.
+                # If Dark Red/Brown cells existed and were populated, a check for "4-Bet_All-In" would go here.
+                return {"action": "Fold to 3Bet", "reason": "Hand not in VS_3Bet range", "hand_played": hero_hand}
+            else: return {"action": "Fold to 3Bet", "reason": f"No VS_3Bet range for {hero_position} RFI vs {villain_3bettor_pos} 3Bet", "hand_played": hero_hand}
+        except Exception as e: return {"action": "Fold to 3Bet", "reason": f"Error in VS_3Bet lookup: {str(e)}", "hand_played": hero_hand}
+    
+    return {"action": "Fold", "reason": "Complex scenario logic not yet implemented", "hand_played": hero_hand}
+
+
+# --- Example Usage (Conceptual) ---
+if __name__ == '__main__':
+    # ... (RFI and VS_RFI examples) ...
+
+    print("\n--- VS 3Bet Tests (Post User Clarification on Sizing Source and No All-Ins) ---")
+    # Test UTG (Hero) vs HJ 3Bet (to 6BB). Action panel for UTG: Raise 18BB, Call, Fold.
+    actions_utg_vs_hj_3bet = [
+        {"position": "UTG", "action": "Raise", "size_bb": 2, "sequence_number": 0}, 
+        {"position": "HJ", "action": "Raise", "size_bb": 6, "sequence_number": 1}    
+    ]
+    print(f"UTG with AKo vs HJ 3Bet: {get_preflop_action('UTG', 'AKo', actions_utg_vs_hj_3bet)}") 
+    print(f"UTG with AQs vs HJ 3Bet: {get_preflop_action('UTG', 'AQs', actions_utg_vs_hj_3bet)}") 
+
+    # Test UTG (Hero) vs CO 3Bet (to 7.5BB). Action panel for UTG: Raise 22BB, All-In 75BB, Call, Fold.
+    # User said for 4.50.55 PM.jpg (UTG vs CO 3B), "Raise 18BB" is the button.
+    # And their example "Raising hands" for that chart: AA, KK, AKo, KQs, KJs, AJs, QQ, JJ, AQo
+    actions_utg_vs_co_3bet = [
+        {"position": "UTG", "action": "Raise", "size_bb": 2, "sequence_number": 0}, 
+        {"position": "CO", "action": "Raise", "size_bb": 7.5, "sequence_number": 1} # Example 3B size
+    ]
+    print(f"UTG with KQs vs CO 3Bet: {get_preflop_action('UTG', 'KQs', actions_utg_vs_co_3bet)}") 
+    print(f"UTG with TT vs CO 3Bet: {get_preflop_action('UTG', 'TT', actions_utg_vs_co_3bet)}")   
+
+    # Test HJ (Hero) vs BTN 3Bet (to 7BB). Action panel for HJ: Raise 20BB, All-In 75BB, Call, Fold.
+    actions_hj_vs_btn_3bet = [
+        {"position": "HJ", "action": "Raise", "size_bb": 2, "sequence_number": 0}, 
+        {"position": "BTN", "action": "Raise", "size_bb": 7, "sequence_number": 1}    
+    ]
+    print(f"HJ with KK vs BTN 3Bet: {get_preflop_action('HJ', 'KK', actions_hj_vs_btn_3bet)}")
+    print(f"HJ with QQ vs BTN 3Bet: {get_preflop_action('HJ', 'QQ', actions_hj_vs_btn_3bet)}")
