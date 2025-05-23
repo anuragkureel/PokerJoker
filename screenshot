@@ -1,7 +1,0 @@
-from PIL import ImageGrab
-
-# Capture the entire screen
-screenshot = ImageGrab.grab()
-screenshot.save("full_screenshot.png")
-
-print("Screenshot saved as full_screenshot.png")
